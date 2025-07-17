@@ -1,0 +1,1225 @@
+-- Load Rayfield UI
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+local ESPDrawings = {}
+
+-- Movement flags
+local wsEnabled, jpEnabled = false, false
+local wsValue, jpValue = 16, 50
+local infJump = false
+local noclip = false
+
+-- Window GUI
+local Window = Rayfield:CreateWindow({
+	Name = "GX Utility Hub",
+	LoadingTitle = "Loading...",
+	LoadingSubtitle = "By Abrail",
+	ConfigurationSaving = {Enabled = false},
+	KeySystem = false
+})
+
+-----------------------
+-- TAB: Movement
+-----------------------
+local MoveTab = Window:CreateTab("Movement", 4483362458)
+
+-- WalkSpeed Toggle
+MoveTab:CreateToggle({
+	Name = "Aktifkan WalkSpeed",
+	CurrentValue = false,
+	Callback = function(state)
+		wsEnabled = state
+		local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+		local hum = char:FindFirstChildOfClass("Humanoid")
+		if hum then
+			hum.WalkSpeed = state and wsValue or 16
+		end
+	end
+})
+
+-- WalkSpeed Input
+MoveTab:CreateInput({
+	Name = "Nilai WalkSpeed",
+	PlaceholderText = "Default: 16",
+	RemoveTextAfterFocusLost = true,
+	Callback = function(Value)
+		local num = tonumber(Value)
+		if num then
+			wsValue = num
+			if wsEnabled then
+				local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+				local hum = char:FindFirstChildOfClass("Humanoid")
+				if hum then hum.WalkSpeed = wsValue end
+			end
+		end
+	end
+})
+
+-- JumpPower Toggle
+MoveTab:CreateToggle({
+	Name = "Aktifkan JumpPower",
+	CurrentValue = false,
+	Callback = function(state)
+		jpEnabled = state
+		local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+		local hum = char:FindFirstChildOfClass("Humanoid")
+		if hum then
+			if hum.UseJumpPower then
+				hum.JumpPower = state and jpValue or 50
+			else
+				hum.JumpHeight = state and (jpValue / 3) or 7.2
+			end
+		end
+	end
+})
+
+-- JumpPower Input
+MoveTab:CreateInput({
+	Name = "Nilai JumpPower",
+	PlaceholderText = "Default: 50",
+	RemoveTextAfterFocusLost = true,
+	Callback = function(Value)
+		local num = tonumber(Value)
+		if num then
+			jpValue = num
+			if jpEnabled then
+				local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+				local hum = char:FindFirstChildOfClass("Humanoid")
+				if hum then
+					if hum.UseJumpPower then
+						hum.JumpPower = jpValue
+					else
+						hum.JumpHeight = (jpValue / 3)
+					end
+				end
+			end
+		end
+	end
+})
+
+-- Infinite Jump
+MoveTab:CreateToggle({
+	Name = "Infinite Jump",
+	CurrentValue = false,
+	Callback = function(state)
+		infJump = state
+	end
+})
+
+game:GetService("UserInputService").JumpRequest:Connect(function()
+	if infJump then
+		local char = LocalPlayer.Character
+		if char then
+			char:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+		end
+	end
+end)
+
+-- Noclip
+MoveTab:CreateToggle({
+	Name = "Noclip",
+	CurrentValue = false,
+	Callback = function(state)
+		noclip = state
+	end
+})
+
+RunService.Stepped:Connect(function()
+	if noclip then
+		local char = LocalPlayer.Character
+		if char then
+			for _, v in pairs(char:GetDescendants()) do
+				if v:IsA("BasePart") then
+					v.CanCollide = false
+				end
+			end
+		end
+	end
+end)
+
+-- Apply ulang saat respawn
+LocalPlayer.CharacterAdded:Connect(function(char)
+	char:WaitForChild("Humanoid")
+	task.wait(0.25)
+	local hum = char:FindFirstChildOfClass("Humanoid")
+	if hum then
+		hum.WalkSpeed = wsEnabled and wsValue or 16
+		if jpEnabled then
+			if hum.UseJumpPower then
+				hum.JumpPower = jpValue
+			else
+				hum.JumpHeight = (jpValue / 3)
+			end
+		else
+			if hum.UseJumpPower then
+				hum.JumpPower = 50
+			else
+				hum.JumpHeight = 7.2
+			end
+		end
+	end
+end)
+
+-----------------------
+-- TAB: ESP
+-----------------------
+local ESP_Name, ESP_Distance, ESP_Box, ESP_Tracer, ESP_HeadDot = false, false, false, false, false
+local ESPTab = Window:CreateTab("ESP", 4483362458)
+
+local function resetESP(player)
+	local data = ESPDrawings[player]
+	if data then
+		if data.Name then pcall(function() data.Name:Remove() end) end
+		if data.Distance then pcall(function() data.Distance:Remove() end) end
+		if data.Tracer then pcall(function() data.Tracer:Remove() end) end
+		if data.HeadDot then pcall(function() data.HeadDot:Remove() end) end
+		if data.Highlight and data.Highlight:IsA("Highlight") then
+			pcall(function() data.Highlight:Destroy() end)
+		end
+		ESPDrawings[player] = nil
+	end
+end
+
+local function trackCharacter(player)
+	player.CharacterAdded:Connect(function(char)
+		resetESP(player)
+		local hum = char:WaitForChild("Humanoid", 5)
+		if hum then
+			hum.Died:Connect(function()
+				resetESP(player)
+			end)
+		end
+	end)
+end
+
+for _, p in ipairs(Players:GetPlayers()) do
+	if p ~= LocalPlayer then
+		trackCharacter(p)
+	end
+end
+
+Players.PlayerAdded:Connect(function(p)
+	if p ~= LocalPlayer then
+		trackCharacter(p)
+	end
+end)
+
+Players.PlayerRemoving:Connect(resetESP)
+
+RunService.RenderStepped:Connect(function()
+	for _, player in pairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Head") and player.Character:FindFirstChildOfClass("Humanoid") and player.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
+			local hrp = player.Character.HumanoidRootPart
+			local head = player.Character.Head
+			local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+
+			if not ESPDrawings[player] then
+				local highlight = Instance.new("Highlight")
+				highlight.Enabled = false
+				highlight.FillColor = Color3.fromRGB(0, 255, 0)
+				highlight.FillTransparency = 0.5
+				highlight.OutlineColor = Color3.new(1, 1, 1)
+				highlight.OutlineTransparency = 0
+				highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+				highlight.Name = "GX_Highlight"
+				highlight.Parent = game.CoreGui
+
+				ESPDrawings[player] = {
+					Name = Drawing.new("Text"),
+					Distance = Drawing.new("Text"),
+					Tracer = Drawing.new("Line"),
+					HeadDot = Drawing.new("Circle"),
+					Highlight = highlight
+				}
+			end
+
+			local draw = ESPDrawings[player]
+
+			draw.Name.Visible = false
+			draw.Distance.Visible = false
+			draw.Tracer.Visible = false
+			draw.HeadDot.Visible = false
+			draw.Highlight.Enabled = false
+			draw.Highlight.Adornee = nil
+
+			if onScreen then
+				local dist = (LocalPlayer.Character.HumanoidRootPart.Position - hrp.Position).Magnitude
+
+				if ESP_Name then
+					draw.Name.Position = Vector2.new(pos.X, pos.Y - 20)
+					draw.Name.Text = player.DisplayName
+					draw.Name.Size = 14
+					draw.Name.Center = true
+					draw.Name.Color = Color3.new(1, 1, 1)
+					draw.Name.Outline = true
+					draw.Name.Visible = true
+				end
+
+				if ESP_Distance then
+					draw.Distance.Position = Vector2.new(pos.X, pos.Y + 20)
+					draw.Distance.Text = math.floor(dist) .. "m"
+					draw.Distance.Size = 13
+					draw.Distance.Center = true
+					draw.Distance.Color = Color3.fromRGB(255, 255, 0)
+					draw.Distance.Outline = true
+					draw.Distance.Visible = true
+				end
+
+				if ESP_Tracer then
+					draw.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+					draw.Tracer.To = Vector2.new(pos.X, pos.Y)
+					draw.Tracer.Color = Color3.new(1, 0, 0)
+					draw.Tracer.Thickness = 1
+					draw.Tracer.Transparency = 1
+					draw.Tracer.Visible = true
+				end
+
+				if ESP_HeadDot then
+					local headPos = Camera:WorldToViewportPoint(head.Position)
+					draw.HeadDot.Position = Vector2.new(headPos.X, headPos.Y)
+					draw.HeadDot.Radius = 5
+					draw.HeadDot.Color = Color3.new(0, 1, 1)
+					draw.HeadDot.Filled = true
+					draw.HeadDot.Visible = true
+				end
+
+				if ESP_Box then
+					draw.Highlight.Adornee = player.Character
+					draw.Highlight.Enabled = true
+				end
+			end
+		else
+			resetESP(player)
+		end
+	end
+end)
+
+-- ESP Toggles
+ESPTab:CreateToggle({ Name = "ESP Player Name", CurrentValue = false, Callback = function(val) ESP_Name = val end })
+ESPTab:CreateToggle({ Name = "ESP Player Distance", CurrentValue = false, Callback = function(val) ESP_Distance = val end })
+ESPTab:CreateToggle({ Name = "ESP Player Box (Highlight)", CurrentValue = false, Callback = function(val) ESP_Box = val end })
+ESPTab:CreateToggle({ Name = "ESP Player Tracer", CurrentValue = false, Callback = function(val) ESP_Tracer = val end })
+ESPTab:CreateToggle({ Name = "ESP Player Head Dot", CurrentValue = false, Callback = function(val) ESP_HeadDot = val end })
+
+-----------------------
+-- TAB: Misc
+-----------------------
+local MiscTab = Window:CreateTab("Misc", 4483362458)
+
+local savedPosition = nil
+
+MiscTab:CreateButton({
+	Name = "Save Position",
+	Callback = function()
+		local char = LocalPlayer.Character
+		if char and char:FindFirstChild("HumanoidRootPart") then
+			savedPosition = char.HumanoidRootPart.Position
+			Rayfield:Notify({
+				Title = "Posisi Tersimpan!",
+				Content = "Berhasil menyimpan posisi.",
+				Duration = 3
+			})
+		end
+	end
+})
+
+MiscTab:CreateButton({
+	Name = "Teleport ke Saved Position",
+	Callback = function()
+		local char = LocalPlayer.Character
+		if savedPosition and char and char:FindFirstChild("HumanoidRootPart") then
+			char.HumanoidRootPart.CFrame = CFrame.new(savedPosition)
+			Rayfield:Notify({
+				Title = "Teleported!",
+				Content = "Berhasil teleport ke posisi tersimpan.",
+				Duration = 3
+			})
+		else
+			Rayfield:Notify({
+				Title = "Gagal Teleport!",
+				Content = "Posisi belum disimpan atau karakter tidak ditemukan.",
+				Duration = 3
+			})
+		end
+	end
+})
+
+local lighting = game:GetService("Lighting")
+local brightConnection
+local fullBrightEnabled = false
+
+MiscTab:CreateToggle({
+	Name = "Full Bright",
+	CurrentValue = false,
+	Callback = function(state)
+		fullBrightEnabled = state
+
+		if state then
+			lighting.Brightness = 2
+			lighting.ClockTime = 14
+			lighting.FogEnd = 100000
+			lighting.GlobalShadows = false
+			lighting.OutdoorAmbient = Color3.new(1, 1, 1)
+
+			-- Override Lighting saat berubah
+			brightConnection = lighting.Changed:Connect(function()
+				if fullBrightEnabled then
+					lighting.Brightness = 2
+					lighting.ClockTime = 14
+					lighting.FogEnd = 100000
+					lighting.GlobalShadows = false
+					lighting.OutdoorAmbient = Color3.new(1, 1, 1)
+				end
+			end)
+		else
+			if brightConnection then brightConnection:Disconnect() end
+			lighting.Brightness = 1
+			lighting.ClockTime = 14
+			lighting.FogEnd = 1000
+			lighting.GlobalShadows = true
+			lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+		end
+	end
+})
+
+-----------------------
+-- TAB: Teleport
+-----------------------
+local TeleportTab = Window:CreateTab("Teleport", 4483362458)
+local targetName = ""
+
+TeleportTab:CreateInput({
+	Name = "Nama Player (Display/Username)",
+	PlaceholderText = "Contoh: abrail",
+	RemoveTextAfterFocusLost = false,
+	Callback = function(text)
+		targetName = text:lower()
+	end
+})
+
+TeleportTab:CreateButton({
+	Name = "Teleport ke Player",
+	Callback = function()
+		local char = LocalPlayer.Character
+		if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+
+		for _, plr in pairs(Players:GetPlayers()) do
+			if plr ~= LocalPlayer then
+				local uname = plr.Name:lower()
+				local dname = plr.DisplayName:lower()
+				if uname:sub(1, #targetName) == targetName or dname:sub(1, #targetName) == targetName then
+					if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+						char:WaitForChild("HumanoidRootPart").CFrame = plr.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
+						Rayfield:Notify({
+							Title = "Teleport Berhasil!",
+							Content = "Teleport ke " .. plr.DisplayName,
+							Duration = 3
+						})
+						return
+					end
+				end
+			end
+		end
+
+		Rayfield:Notify({
+			Title = "Teleport Gagal!",
+			Content = "Player tidak ditemukan!",
+			Duration = 3
+		})
+	end
+})
+
+local sitFollowConnection
+local sitFollowEnabled = false
+
+TeleportTab:CreateToggle({
+	Name = "Duduk di Atas Player (Auto)",
+	CurrentValue = false,
+	Callback = function(state)
+		sitFollowEnabled = state
+		if sitFollowConnection then sitFollowConnection:Disconnect() end
+
+		if state then
+			sitFollowConnection = RunService.RenderStepped:Connect(function()
+				local myChar = LocalPlayer.Character
+				if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return end
+
+				for _, plr in pairs(Players:GetPlayers()) do
+					if plr ~= LocalPlayer then
+						local uname = plr.Name:lower()
+						local dname = plr.DisplayName:lower()
+						if uname:sub(1, #targetName) == targetName or dname:sub(1, #targetName) == targetName then
+							if plr.Character and plr.Character:FindFirstChild("Head") then
+								local headPos = plr.Character.Head.Position
+								local myHRP = myChar:FindFirstChild("HumanoidRootPart")
+								if myHRP then
+									myHRP.CFrame = CFrame.new(headPos + Vector3.new(0, 2.5, 0))
+									local hum = myChar:FindFirstChildOfClass("Humanoid")
+									if hum then hum.Sit = true end
+								end
+							end
+						end
+					end
+				end
+			end)
+		end
+	end
+})
+
+local ESPTab = Window:CreateTab("99 Nights", 4483362458)
+
+-- Fungsi ESP
+local function createESP(part, text, color)
+	if part:FindFirstChild("ESPName") then return end
+	local gui = Instance.new("BillboardGui")
+	gui.Name = "ESPName"
+	gui.Adornee = part
+	gui.Size = UDim2.new(0, 200, 0, 50)
+	gui.StudsOffset = Vector3.new(0, 3, 0)
+	gui.AlwaysOnTop = true
+
+	local label = Instance.new("TextLabel", gui)
+	label.Size = UDim2.new(1, 0, 1, 0)
+	label.BackgroundTransparency = 1
+	label.Text = text
+	label.TextColor3 = color
+	label.TextStrokeTransparency = 0.4
+	label.TextScaled = true
+	label.Font = Enum.Font.GothamBold
+
+	gui.Parent = part
+end
+
+local function getMainPart(model)
+	return model:FindFirstChild("HumanoidRootPart") or model.PrimaryPart or model:FindFirstChild("Head") or model:FindFirstChildWhichIsA("BasePart")
+end
+
+-- Fungsi Hapus Semua ESP
+local function clearAllESP()
+	for _, v in pairs(workspace:GetDescendants()) do
+		if v:IsA("BasePart") and v:FindFirstChild("ESPName") then
+			v.ESPName:Destroy()
+		end
+	end
+end
+
+-- == ESP TOGGLES == --
+
+-- ESP Player
+local playerESP = false
+ESPTab:CreateToggle({
+	Name = "ESP Player",
+	CurrentValue = false,
+	Callback = function(state)
+		playerESP = state
+		if state then
+			task.spawn(function()
+				while playerESP do
+					for _, p in pairs(Players:GetPlayers()) do
+						if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+							local part = p.Character.HumanoidRootPart
+							if not part:FindFirstChild("ESPName") then
+								local dist = (part.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+								createESP(part, p.DisplayName.." ["..math.floor(dist).."m]", Color3.fromRGB(0, 255, 0))
+							end
+						end
+					end
+					task.wait(1)
+				end
+				clearAllESP()
+			end)
+		else
+			clearAllESP()
+		end
+	end
+})
+
+-- ESP Hewan / Musuh
+local npcESP = false
+ESPTab:CreateToggle({
+	Name = "ESP Hewan / Musuh",
+	CurrentValue = false,
+	Callback = function(state)
+		npcESP = state
+		if state then
+			task.spawn(function()
+				while npcESP do
+					for _, npc in pairs(workspace:GetDescendants()) do
+						if npc:IsA("Model") and not Players:GetPlayerFromCharacter(npc) then
+							local name = npc.Name:lower()
+							if name:find("wolf") or name:find("boar") or name:find("bear") or name:find("enemy") or name:find("deer") then
+								local part = getMainPart(npc)
+								if part and not part:FindFirstChild("ESPName") then
+									local dist = (part.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+									createESP(part, npc.Name.." ["..math.floor(dist).."m]", Color3.fromRGB(255, 50, 50))
+								end
+							end
+						end
+					end
+					task.wait(1)
+				end
+				clearAllESP()
+			end)
+		else
+			clearAllESP()
+		end
+	end
+})
+
+-- ESP Chest
+local chestESP = false
+ESPTab:CreateToggle({
+	Name = "ESP Chest",
+	CurrentValue = false,
+	Callback = function(state)
+		chestESP = state
+		if state then
+			task.spawn(function()
+				while chestESP do
+					for _, chest in pairs(workspace:GetDescendants()) do
+						if chest:IsA("Model") and chest.Name:lower():find("chest") then
+							local part = getMainPart(chest)
+							if part and not part:FindFirstChild("ESPName") then
+								local dist = (part.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+								createESP(part, chest.Name.." ["..math.floor(dist).."m]", Color3.fromRGB(255, 215, 0))
+							end
+						end
+					end
+					task.wait(1)
+				end
+				clearAllESP()
+			end)
+		else
+			clearAllESP()
+		end
+	end
+})
+
+-- ESP Item
+local itemESP = false
+ESPTab:CreateToggle({
+	Name = "ESP Item (Perban, Obat, Medkit)",
+	CurrentValue = false,
+	Callback = function(state)
+		itemESP = state
+		if state then
+			task.spawn(function()
+				while itemESP do
+					for _, item in pairs(workspace:GetDescendants()) do
+						if item:IsA("Model") or item:IsA("Tool") then
+							local name = item.Name:lower()
+							if name:find("perban") or name:find("obat") or name:find("bandage") or name:find("med") then
+								local part = getMainPart(item)
+								if part and not part:FindFirstChild("ESPName") then
+									local dist = (part.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+									createESP(part, item.Name.." ["..math.floor(dist).."m]", Color3.fromRGB(0, 200, 255))
+								end
+							end
+						end
+					end
+					task.wait(1)
+				end
+				clearAllESP()
+			end)
+		else
+			clearAllESP()
+		end
+	end
+})
+
+local flying = false
+local flyConn
+
+ESPTab:CreateToggle({
+	Name = "Fly",
+	CurrentValue = false,
+	Callback = function(state)
+		flying = state
+		local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+		local root = char:WaitForChild("HumanoidRootPart")
+
+		if state then
+			-- Tambahkan BodyVelocity untuk terbang
+			local bv = Instance.new("BodyVelocity")
+			bv.Name = "FlyForce"
+			bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+			bv.Velocity = Vector3.zero
+			bv.Parent = root
+
+			-- Update arah berdasarkan kamera
+			flyConn = RunService.RenderStepped:Connect(function()
+				if not flying then return end
+				local cam = workspace.CurrentCamera
+				if bv and bv.Parent then
+					bv.Velocity = cam.CFrame.LookVector * 50
+				end
+			end)
+		else
+			-- Nonaktifkan Fly
+			if root:FindFirstChild("FlyForce") then
+				root.FlyForce:Destroy()
+			end
+			if flyConn then
+				flyConn:Disconnect()
+			end
+		end
+	end
+})
+
+local autoFillHunger = false
+local autoFillThread
+
+ESPTab:CreateToggle({
+	Name = "Auto Fill Hunger (Butuh Item)",
+	CurrentValue = false,
+	Callback = function(state)
+		autoFillHunger = state
+
+		if state then
+			autoFillThread = task.spawn(function()
+				while autoFillHunger do
+					local stats = game.Players.LocalPlayer:FindFirstChild("Stats")
+					local hunger = stats and stats:FindFirstChild("Hunger")
+					if hunger and hunger.Value < 60 then
+						for _, tool in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+							local name = tool.Name:lower()
+							if name:find("meat") or name:find("morsel") or name:find("food") or name:find("cook") or name:find("perban") == false then
+								local char = game.Players.LocalPlayer.Character
+								if char and char:FindFirstChild("Humanoid") then
+									char.Humanoid:EquipTool(tool)
+									task.wait(0.2)
+									tool:Activate() -- makan
+									break
+								end
+							end
+						end
+					end
+					task.wait(2)
+				end
+			end)
+		else
+			pcall(function() task.cancel(autoFillThread) end)
+		end
+	end
+})
+
+local autoRevive = false
+local reviveThread
+
+ESPTab:CreateToggle({
+	Name = "Auto Revive Pemain (Butuh Perban)",
+	CurrentValue = false,
+	Callback = function(state)
+		autoRevive = state
+
+		if state then
+			reviveThread = task.spawn(function()
+				local ReplicatedStorage = game:GetService("ReplicatedStorage")
+				local RequestHeal = ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("RequestHealPlayer")
+
+				while autoRevive do
+					for _, plr in pairs(game.Players:GetPlayers()) do
+						if plr ~= game.Players.LocalPlayer and plr.Character and plr.Character:FindFirstChild("Humanoid") then
+							local hum = plr.Character:FindFirstChild("Humanoid")
+							if hum.Health <= 0 then -- target mati
+								local bandage = nil
+								for _, item in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+									if item:IsA("Tool") and item.Name:lower():find("bandage") then
+										bandage = item
+										break
+									end
+								end
+
+								if bandage then
+									local char = game.Players.LocalPlayer.Character
+									if char and char:FindFirstChild("Humanoid") then
+										char.Humanoid:EquipTool(bandage)
+										task.wait(0.25)
+										pcall(function()
+											RequestHeal:FireServer(plr)
+										end)
+										task.wait(1.5)
+									end
+								end
+							end
+						end
+					end
+					task.wait(2)
+				end
+			end)
+		else
+			pcall(function() task.cancel(reviveThread) end)
+		end
+	end
+})
+
+local openChest = false
+
+ESPTab:CreateButton({
+	Name = "Farm Chest (1x Jalankan)",
+	Callback = function()
+		for _, chest in pairs(workspace:GetDescendants()) do
+			if chest:IsA("Model") and chest.Name:lower():find("chest") then
+				local prompt = chest:FindFirstChildWhichIsA("ProximityPrompt", true)
+				if prompt and prompt:IsA("ProximityPrompt") and prompt.Enabled then
+					prompt.MaxActivationDistance = 9999
+					prompt.HoldDuration = 0
+					pcall(function()
+						fireproximityprompt(prompt)
+					end)
+				end
+			end
+		end
+	end,
+})
+
+-----------------------
+-- TAB: Bring Item
+-----------------------
+local BringItemTab = Window:CreateTab("Bring Item", 4483362458)
+
+local function bringItemByName(keywordList, color)
+	local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+	local hrp = char:WaitForChild("HumanoidRootPart")
+
+	local found = false
+	for _, item in pairs(workspace:GetDescendants()) do
+		if item:IsA("Model") or item:IsA("Tool") then
+			local lowerName = item.Name:lower()
+			for _, keyword in pairs(keywordList) do
+				if lowerName:find(keyword) then
+					local part = item:IsA("Tool") and item:FindFirstChild("Handle") or item:FindFirstChildWhichIsA("BasePart")
+					if part then
+						part.CFrame = hrp.CFrame + Vector3.new(math.random(-3,3), 2, math.random(-3,3))
+						found = true
+					end
+				end
+			end
+		end
+	end
+
+	Rayfield:Notify({
+		Title = found and "Item Dibawa!" or "Tidak Ada Item!",
+		Content = found and "Item berhasil dibawa ke sekitar kamu." or "Item tidak ditemukan di sekitar.",
+		Duration = 3
+	})
+end
+
+BringItemTab:CreateSection("Health")
+
+BringItemTab:CreateButton({
+	Name = "Bring Medkit",
+	Callback = function()
+		bringItemByName({"medkit", "med"}, Color3.fromRGB(0, 255, 255))
+	end
+})
+
+BringItemTab:CreateButton({
+	Name = "Bring Perban",
+	Callback = function()
+		bringItemByName({"perban", "bandage"}, Color3.fromRGB(255, 255, 255))
+	end
+})
+
+BringItemTab:CreateSection("Lost Child and Gun")
+
+-- Bring Lost Child
+BringItemTab:CreateButton({
+	Name = "Bring Lost Child",
+	Callback = function()
+		bringItemByName({"lost", "child", "anak"})
+	end
+})
+
+-- Bring Revolver
+BringItemTab:CreateButton({
+	Name = "Bring Revolver",
+	Callback = function()
+		bringItemByName({"revolver"})
+	end
+})
+
+BringItemTab:CreateButton({
+	Name = "Bring Rifle",
+	Callback = function()
+		bringItemByName({"rifle"})
+	end
+})
+
+-- Bring Ammo
+BringItemTab:CreateButton({
+	Name = "Bring Ammo",
+	Callback = function()
+		bringItemByName({"ammo", "peluru", "bullet"})
+	end
+})
+
+
+BringItemTab:CreateButton({
+	Name = "Bring Tombak / Spear",
+	Callback = function()
+		bringItemByName({"tombak", "spear"})
+	end
+})
+
+-- Bring Flashlight
+BringItemTab:CreateButton({
+	Name = "Bring Flashlight",
+	Callback = function()
+		bringItemByName({"flashlight", "senter"})
+	end
+})
+
+BringItemTab:CreateSection("Daging")
+
+BringItemTab:CreateButton({
+	Name = "Bring Cooked Meat (Daging Masak)",
+	Callback = function()
+		local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+		local hrp = char:WaitForChild("HumanoidRootPart")
+		local found = false
+
+		for _, item in pairs(workspace:GetDescendants()) do
+			if item:IsA("Model") or item:IsA("Tool") then
+				local name = item.Name:lower()
+				if name:find("meat") or name:find("daging") or name:find("cooked") or name:find("panggang") then
+					local part = item:IsA("Tool") and item:FindFirstChild("Handle") or item:FindFirstChildWhichIsA("BasePart")
+					if part then
+						part.CFrame = hrp.CFrame + Vector3.new(math.random(-3,3), 2, math.random(-3,3))
+						found = true
+					end
+				end
+			end
+		end
+
+		Rayfield:Notify({
+			Title = found and "Daging Masak Dibawa!" or "Tidak Ditemukan!",
+			Content = found and "Item daging yang dimasak telah dibawa ke dekat kamu." or "Tidak ditemukan daging masak.",
+			Duration = 3
+		})
+	end
+})
+
+-- Bring Raw Meat
+BringItemTab:CreateButton({
+	Name = "Bring Meat (Mentah)",
+	Callback = function()
+		bringItemByName({"steak"})
+	end
+})
+
+BringItemTab:CreateButton({
+	Name = "Bring Morsel (Mentah)",
+	Callback = function()
+		bringItemByName({"morsel", "daging kecil", "raw"})
+	end
+})
+
+BringItemTab:CreateSection("Besi Medan Pompa")
+
+-- Bring Tyre
+BringItemTab:CreateButton({
+	Name = "Bring Tyre / Ban",
+	Callback = function()
+		bringItemByName({"tyre", "tire"})
+	end
+})
+
+-- Bring Fan
+BringItemTab:CreateButton({
+	Name = "Bring Fan",
+	Callback = function()
+		bringItemByName({"fan", "kipas"})
+	end
+})
+
+-- Bring Nails
+-- Bring Baut / Bolt / Screw
+BringItemTab:CreateButton({
+	Name = "Bring Baut",
+	Callback = function()
+		bringItemByName({"baut", "screw", "bolt", "fastener"})
+	end
+})
+
+-- Bring Microwave
+BringItemTab:CreateButton({
+	Name = "Bring Microwave",
+	Callback = function()
+		bringItemByName({"microwave"})
+	end
+})
+
+BringItemTab:CreateButton({
+	Name = "Bring Lembaran Logam / Sheet Metal",
+	Callback = function()
+		bringItemByName({"sheet metal", "metal sheet", "iron sheet", "lembaran", "lembaran logam", "besi lembaran"})
+	end
+})
+
+-- Bring Radio Tua
+BringItemTab:CreateButton({
+	Name = "Bring Radio Tua",
+	Callback = function()
+		bringItemByName({"radio", "old radio", "rusty radio", "radio tua"})
+	end
+})
+
+BringItemTab:CreateButton({
+	Name = "Bring Washing Machine",
+	Callback = function()
+		bringItemByName({"washing machine", "mesin cuci", "washer"})
+	end
+})
+
+BringItemTab:CreateSection("fuel")
+
+-- Bring Kursi
+BringItemTab:CreateButton({
+	Name = "Bring Kursi",
+	Callback = function()
+		bringItemByName({"kursi", "chair"})
+	end
+})
+
+BringItemTab:CreateButton({
+	Name = "Bring Kayu / Logs",
+	Callback = function()
+		bringItemByName({"kayu", "wood", "log", "logs"}, Color3.fromRGB(165, 42, 42))
+	end
+})
+
+BringItemTab:CreateButton({
+	Name = "Bring Bensin",
+	Callback = function()
+		bringItemByName({"bensin", "fuel", "gas"}, Color3.fromRGB(255, 85, 0))
+	end
+})
+
+BringItemTab:CreateButton({
+	Name = "Bring Coal",
+	Callback = function()
+		bringItemByName({"coal", "arang"}, Color3.fromRGB(30, 30, 30))
+	end
+})
+
+BringItemTab:CreateButton({
+	Name = "Bring Oil Barrel",
+	Callback = function()
+		bringItemByName({"oil barrel"})
+	end
+})
+
+BringItemTab:CreateButton({
+	Name = "Bring BioFuel",
+	Callback = function()
+		bringItemByName({"biofuel"})
+	end
+})
+
+local HitboxTab = Window:CreateTab("Hitbox", 4483362458)
+
+local hitboxSize = Vector3.new(10, 10, 10)
+local hitboxTransparency = 0.7
+
+local hitboxTargets = {
+	Bunny = false,
+	Wolf = false,
+	Bear = false,
+	Adherent = false,
+	Archer = false
+}
+
+local function applyHitbox(model)
+	local part = model:FindFirstChild("HumanoidRootPart") or model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart")
+	if part then
+		part.Size = hitboxSize
+		part.Transparency = hitboxTransparency
+		part.Material = Enum.Material.Neon
+		part.CanCollide = false
+	end
+end
+
+local function resetHitbox(model)
+	local part = model:FindFirstChild("HumanoidRootPart") or model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart")
+	if part then
+		part.Size = Vector3.new(2, 2, 1)
+		part.Transparency = 0
+		part.Material = Enum.Material.Plastic
+	end
+end
+
+-- Looping update hitbox
+task.spawn(function()
+	while true do
+		for _, obj in pairs(workspace:GetDescendants()) do
+			if obj:IsA("Model") and obj:FindFirstChildOfClass("Humanoid") then
+				local name = obj.Name:lower()
+
+if hitboxTargets.Bunny and name:find("bunny") then
+	applyHitbox(obj)
+elseif hitboxTargets.Wolf and name:find("wolf") then
+	applyHitbox(obj)
+elseif hitboxTargets.Bear and name:find("bear") then
+	applyHitbox(obj)
+elseif hitboxTargets.Adherent and (
+	name:find("adherent") or
+	name:find("religious") or
+	name:find("cult") or
+	name:find("pengikut") or
+	name:find("penganut")
+) then
+	applyHitbox(obj)
+elseif hitboxTargets.Archer and (name:find("archer") or name:find("panah") or name:find("bow")) then
+	applyHitbox(obj)
+else
+	resetHitbox(obj)
+end
+			end
+		end
+		task.wait(1)
+	end
+end)
+
+-- Toggle Bunny
+HitboxTab:CreateToggle({
+	Name = "Hitbox Bunny",
+	CurrentValue = false,
+	Callback = function(state)
+		hitboxTargets.Bunny = state
+	end
+})
+
+-- Toggle Wolf
+HitboxTab:CreateToggle({
+	Name = "Hitbox Wolf",
+	CurrentValue = false,
+	Callback = function(state)
+		hitboxTargets.Wolf = state
+	end
+})
+
+-- Toggle Bear
+HitboxTab:CreateToggle({
+	Name = "Hitbox Bear",
+	CurrentValue = false,
+	Callback = function(state)
+		hitboxTargets.Bear = state
+	end
+})
+
+-- Toggle Religious Adherents
+-- Toggle Penganut Agama
+HitboxTab:CreateToggle({
+	Name = "Hitbox Penganut Agama",
+	CurrentValue = false,
+	Callback = function(state)
+		hitboxTargets.Adherent = state
+	end
+})
+
+-- Toggle Penganut Busur (Archer)
+HitboxTab:CreateToggle({
+	Name = "Hitbox Penganut Busur",
+	CurrentValue = false,
+	Callback = function(state)
+		hitboxTargets.Archer = state
+	end
+})
+
+-- Slider Ukuran Hitbox
+HitboxTab:CreateSlider({
+	Name = "Ukuran Hitbox (Default 10)",
+	Range = {2, 200},
+	Increment = 1,
+	Suffix = "",
+	CurrentValue = 10,
+	Callback = function(val)
+		hitboxSize = Vector3.new(val, val, val)
+	end
+})
+
+-- Slider Transparansi Hitbox
+HitboxTab:CreateSlider({
+	Name = "Transparansi Hitbox",
+	Range = {0, 1},
+	Increment = 0.1,
+	Suffix = "",
+	CurrentValue = 0.7,
+	Callback = function(val)
+		hitboxTransparency = val
+	end
+})
+
+local DupeTab = Window:CreateTab("Dupe", 4483362458)
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RemoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
+
+local function dupeItem(itemName)
+	local Backpack = game.Players.LocalPlayer.Backpack
+	for _, item in pairs(Backpack:GetChildren()) do
+		if item:IsA("Tool") and item.Name:lower():find(itemName:lower()) then
+			local dropRemote = RemoteEvents:FindFirstChild("RequestDropItem")
+			local pickupRemote = RemoteEvents:FindFirstChild("RequestPickupItem")
+			if dropRemote and pickupRemote then
+				local char = game.Players.LocalPlayer.Character
+				local hrp = char and char:FindFirstChild("HumanoidRootPart")
+				if hrp then
+					-- Dupe trick: drop and re-pick quickly
+					pcall(function()
+						dropRemote:FireServer(item)
+						task.wait(0.1)
+						for _, obj in pairs(workspace:GetDescendants()) do
+							if obj:IsA("Tool") and obj.Name == item.Name then
+								pickupRemote:FireServer(obj)
+							end
+						end
+					end)
+				end
+			end
+			break
+		end
+	end
+end
+
+DupeTab:CreateSection("Dupe Tools / Items")
+
+DupeTab:CreateButton({
+	Name = "Dupe Perban",
+	Callback = function()
+		dupeItem("perban")
+	end
+})
+
+DupeTab:CreateButton({
+	Name = "Dupe Medkit",
+	Callback = function()
+		dupeItem("med")
+	end
+})
+
+DupeTab:CreateButton({
+	Name = "Dupe Spear",
+	Callback = function()
+		dupeItem("spear")
+	end
+})
+
+DupeTab:CreateButton({
+	Name = "Dupe Rifle",
+	Callback = function()
+		dupeItem("rifle")
+	end
+})
+
+DupeTab:CreateButton({
+	Name = "Dupe Revolver",
+	Callback = function()
+		dupeItem("revolver")
+	end
+})
