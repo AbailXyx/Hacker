@@ -1770,7 +1770,7 @@ Image.Parent = Toggle
 Image.Size = UDim2.new(0.7, 0, 0.7, 0)
 Image.Position = UDim2.new(0.15, 0, 0.15, 0)
 Image.BackgroundTransparency = 1
-Image.Image = "rbxassetid://84829681129699"
+Image.Image = "rbxassetid://110633180699882"
 
 --// Rounded Icon
 local Corner2 = Instance.new("UICorner")
