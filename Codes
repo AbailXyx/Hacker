@@ -1720,37 +1720,90 @@ function OrionLib:ToggleUi()
 	Orion.Enabled = not Orion.Enabled
 end
 
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "Toggleui"
-ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-ScreenGui.ResetOnSpawn = false
+--// Services
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
 
+local LocalPlayer = Players.LocalPlayer
+
+--// ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ToggleUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+--// Button
 local Toggle = Instance.new("TextButton")
 Toggle.Name = "Toggle"
 Toggle.Parent = ScreenGui
-Toggle.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-Toggle.BackgroundTransparency = 0.5
-Toggle.Position = UDim2.new(0, 0, 0.454706937, 0)
-Toggle.Size = UDim2.new(0, 50, 0, 50)
+Toggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+Toggle.BackgroundTransparency = 0.2
+Toggle.Position = UDim2.new(0, 20, 0.4, 0)
+Toggle.Size = UDim2.new(0, 55, 0, 55)
+Toggle.Text = ""
 Toggle.Draggable = true
+Toggle.AutoButtonColor = false
 
+--// Rounded Corner
 local Corner = Instance.new("UICorner")
-Corner.CornerRadius = UDim.new(0.2, 0)
+Corner.CornerRadius = UDim.new(0.3, 0)
 Corner.Parent = Toggle
 
+--// Shadow
+local Shadow = Instance.new("ImageLabel")
+Shadow.Name = "Shadow"
+Shadow.Parent = Toggle
+Shadow.AnchorPoint = Vector2.new(0.5, 0.5)
+Shadow.Position = UDim2.new(0.5, 0, 0.5, 4)
+Shadow.Size = UDim2.new(1.4, 0, 1.4, 0)
+Shadow.BackgroundTransparency = 1
+Shadow.Image = "rbxassetid://1316045217"
+Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+Shadow.ImageTransparency = 0.5
+Shadow.ZIndex = 0
+
+--// Icon
 local Image = Instance.new("ImageLabel")
 Image.Name = "Icon"
 Image.Parent = Toggle
-Image.Size = UDim2.new(1, 0, 1, 0)
+Image.Size = UDim2.new(0.7, 0, 0.7, 0)
+Image.Position = UDim2.new(0.15, 0, 0.15, 0)
 Image.BackgroundTransparency = 1
-Image.Image = "rbxassetid://84829681129699" 
+Image.Image = "rbxassetid://84829681129699"
 
+--// Rounded Icon
 local Corner2 = Instance.new("UICorner")
-Corner2.CornerRadius = UDim.new(0.2, 0)
+Corner2.CornerRadius = UDim.new(0.3, 0)
 Corner2.Parent = Image
 
+--// Hover effect
+Toggle.MouseEnter:Connect(function()
+	TweenService:Create(Toggle, TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+		BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	}):Play()
+end)
+
+Toggle.MouseLeave:Connect(function()
+	TweenService:Create(Toggle, TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+		BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+	}):Play()
+end)
+
+--// Click animation + toggle UI
 Toggle.MouseButton1Click:Connect(function()
-  OrionLib:ToggleUi()
+	-- Animasi klik
+	TweenService:Create(Toggle, TweenInfo.new(0.1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+		Size = UDim2.new(0, 50, 0, 50)
+	}):Play()
+	task.wait(0.1)
+	TweenService:Create(Toggle, TweenInfo.new(0.1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+		Size = UDim2.new(0, 55, 0, 55)
+	}):Play()
+
+	-- Toggle OrionLib UI
+	if OrionLib then
+		OrionLib:ToggleUi()
+	end
 end)
 
 
