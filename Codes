@@ -1770,7 +1770,7 @@ Image.Parent = Toggle
 Image.Size = UDim2.new(0.7, 0, 0.7, 0)
 Image.Position = UDim2.new(0.15, 0, 0.15, 0)
 Image.BackgroundTransparency = 1
-Image.Image = "rbxassetid://110633180699882"
+Image.Image = "rbxassetid://84829681129699"
 
 --// Rounded Icon
 local Corner2 = Instance.new("UICorner")
@@ -1784,7 +1784,7 @@ Label.Parent = Toggle
 Label.Size = UDim2.new(1.8, 0, 0.5, 0)
 Label.Position = UDim2.new(-0.4, 0, 1, 5)
 Label.BackgroundTransparency = 1
-Label.Text = "VipMenuWaldan"
+Label.Text = "Z4XScriptsByAndi"
 Label.TextStrokeTransparency = 0.5
 Label.Font = Enum.Font.GothamBold
 Label.TextSize = 16
