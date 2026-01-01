@@ -33,6 +33,12 @@ local NexusUI = {
 	SaveCfg = false
 }
 
+-- Rainbow effect variables
+NexusUI.RainbowEnabled = true
+NexusUI.RainbowSpeed = 1
+NexusUI.RainbowSaturation = 1
+NexusUI.RainbowValue = 1
+
 --Feather Icons
 local Icons = {}
 
@@ -41,7 +47,7 @@ local Success, Response = pcall(function()
 end)
 
 if not Success then
-	warn("\nNexus Library - Failed to load Feather Icons. Error code: " .. Response .. "\n")
+	warn("\nNexusUI - Failed to load Feather Icons. Error code: " .. Response .. "\n")
 end	
 
 local function GetIcon(IconName)
@@ -197,14 +203,25 @@ local function AddThemeObject(Object, Type)
 		NexusUI.ThemeObjects[Type] = {}
 	end    
 	table.insert(NexusUI.ThemeObjects[Type], Object)
-	Object[ReturnProperty(Object)] = NexusUI.Themes[NexusUI.SelectedTheme][Type]
+	
+	-- Jika tipe Stroke dan rainbow enabled, skip pengaturan warna awal
+	if Type == "Stroke" and NexusUI.RainbowEnabled then
+		-- Jangan set warna, akan diatur oleh rainbow effect
+	else
+		Object[ReturnProperty(Object)] = NexusUI.Themes[NexusUI.SelectedTheme][Type]
+	end
 	return Object
 end    
 
 local function SetTheme()
 	for Name, Type in pairs(NexusUI.ThemeObjects) do
 		for _, Object in pairs(Type) do
-			Object[ReturnProperty(Object)] = NexusUI.Themes[NexusUI.SelectedTheme][Name]
+			-- Jika nama Stroke dan rainbow enabled, skip pengaturan warna
+			if Name == "Stroke" and NexusUI.RainbowEnabled then
+				-- Skip, biarkan rainbow effect yang mengatur
+			else
+				Object[ReturnProperty(Object)] = NexusUI.Themes[NexusUI.SelectedTheme][Name]
+			end
 		end    
 	end    
 end
@@ -378,78 +395,257 @@ CreateElement("Label", function(Text, TextSize, Transparency)
 	return Label
 end)
 
-local NotificationHolder = SetProps(SetChildren(MakeElement("TFrame"), {
-	SetProps(MakeElement("List"), {
-		HorizontalAlignment = Enum.HorizontalAlignment.Center,
-		SortOrder = Enum.SortOrder.LayoutOrder,
-		VerticalAlignment = Enum.VerticalAlignment.Bottom,
-		Padding = UDim.new(0, 5)
-	})
-}), {
-	Position = UDim2.new(1, -25, 1, -25),
+local NotificationHolder = Create("Frame", {
+	Parent = Nexus,
+	Name = "NotificationHolder",
+	BackgroundTransparency = 1,
 	Size = UDim2.new(0, 300, 1, -25),
-	AnchorPoint = Vector2.new(1, 1),
-	Parent = Nexus
+	Position = UDim2.new(1, -325, 0, 25),
+	AnchorPoint = Vector2.new(1, 0),
+	ClipsDescendants = false
 })
+
+local NotificationList = Create("UIListLayout", {
+	Parent = NotificationHolder,
+	SortOrder = Enum.SortOrder.LayoutOrder,
+	VerticalAlignment = Enum.VerticalAlignment.Bottom,
+	Padding = UDim.new(0, 10)
+})
+
+local NotificationPadding = Create("UIPadding", {
+	Parent = NotificationHolder,
+	PaddingBottom = UDim.new(0, 10),
+	PaddingRight = UDim.new(0, 10)
+})
+
+-- Rainbow effect function
+local function UpdateRainbowColors()
+	if not NexusUI.RainbowEnabled then return end
+	
+	local time = tick() * NexusUI.RainbowSpeed
+	local hue = (time % 6) / 6
+	local rainbowColor = Color3.fromHSV(hue, NexusUI.RainbowSaturation, NexusUI.RainbowValue)
+	
+	-- Update all stroke objects
+	if NexusUI.ThemeObjects and NexusUI.ThemeObjects["Stroke"] then
+		for _, obj in ipairs(NexusUI.ThemeObjects["Stroke"]) do
+			if obj and obj.Parent then
+				local property = ReturnProperty(obj)
+				if property then
+					obj[property] = rainbowColor
+				end
+			end
+		end
+	end
+	
+	-- Update toggle button stroke
+	if Toggle and Toggle:FindFirstChild("UIStroke") then
+		Toggle.UIStroke.Color = rainbowColor
+	end
+end
+
+-- Start rainbow effect loop
+spawn(function()
+	while true do
+		UpdateRainbowColors()
+		RunService.RenderStepped:Wait()
+	end
+end)
 
 function NexusUI:MakeNotification(NotificationConfig)
 	spawn(function()
+		-- Set default values
 		NotificationConfig.Name = NotificationConfig.Name or "Notification"
 		NotificationConfig.Content = NotificationConfig.Content or "Test"
 		NotificationConfig.Image = NotificationConfig.Image or "rbxassetid://4384403532"
-		NotificationConfig.Time = NotificationConfig.Time or 15
-
-		local NotificationParent = SetProps(MakeElement("TFrame"), {
+		NotificationConfig.Time = NotificationConfig.Time or 5
+		
+		-- Create notification container
+		local Notification = Create("Frame", {
+			Parent = NotificationHolder,
+			Name = "Notification",
 			Size = UDim2.new(1, 0, 0, 0),
-			AutomaticSize = Enum.AutomaticSize.Y,
-			Parent = NotificationHolder
-		})
-
-		local NotificationFrame = SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(25, 25, 25), 0, 12), {
-			Parent = NotificationParent, 
-			Size = UDim2.new(1, 0, 0, 0),
-			Position = UDim2.new(1, -55, 0, 0),
-			BackgroundTransparency = 0,
+			BackgroundTransparency = 1,
+			ClipsDescendants = true,
+			LayoutOrder = 9999999 - tick(), -- Ensure new notifications appear at bottom
 			AutomaticSize = Enum.AutomaticSize.Y
-		}), {
-			MakeElement("Stroke", Color3.fromRGB(70, 0, 255), 1.2),
-			MakeElement("Padding", 12, 12, 12, 12),
-			SetProps(MakeElement("Image", NotificationConfig.Image), {
-				Size = UDim2.new(0, 20, 0, 20),
-				ImageColor3 = Color3.fromRGB(240, 240, 240),
-				Name = "Icon"
-			}),
-			SetProps(MakeElement("Label", NotificationConfig.Name, 15), {
-				Size = UDim2.new(1, -30, 0, 20),
-				Position = UDim2.new(0, 30, 0, 0),
-				Font = Enum.Font.GothamBold,
-				Name = "Title"
-			}),
-			SetProps(MakeElement("Label", NotificationConfig.Content, 14), {
-				Size = UDim2.new(1, 0, 0, 0),
-				Position = UDim2.new(0, 0, 0, 25),
-				Font = Enum.Font.GothamSemibold,
-				Name = "Content",
-				AutomaticSize = Enum.AutomaticSize.Y,
-				TextColor3 = Color3.fromRGB(200, 200, 200),
-				TextWrapped = true
-			})
 		})
-
-		TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = UDim2.new(0, 0, 0, 0)}):Play()
-
-		wait(NotificationConfig.Time - 0.88)
-		TweenService:Create(NotificationFrame.Ico, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
-		TweenService:Create(NotificationFrame, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {BackgroundTransparency = 0.6}):Play()
-		wait(0.3)
-		TweenService:Create(NotificationFrame.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {Transparency = 0.9}):Play()
-		TweenService:Create(NotificationFrame.Title, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {TextTransparency = 0.4}):Play()
-		TweenService:Create(NotificationFrame.Content, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {TextTransparency = 0.5}):Play()
-		wait(0.05)
-
-		NotificationFrame:TweenPosition(UDim2.new(1, 20, 0, 0),'In','Quint',0.8,true)
-		wait(1.35)
-		NotificationFrame:Destroy()
+		
+		-- Create notification frame
+		local NotificationFrame = Create("Frame", {
+			Parent = Notification,
+			Name = "Frame",
+			Size = UDim2.new(1, 0, 0, 0),
+			Position = UDim2.new(1, 10, 0, 0),
+			BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+			BackgroundTransparency = 0,
+			AutomaticSize = Enum.AutomaticSize.Y,
+			ClipsDescendants = true
+		})
+		
+		-- Add corner
+		local Corner = Create("UICorner", {
+			Parent = NotificationFrame,
+			CornerRadius = UDim.new(0, 12)
+		})
+		
+		-- Add stroke (not rainbow)
+		local Stroke = Create("UIStroke", {
+			Parent = NotificationFrame,
+			Color = Color3.fromRGB(70, 0, 255),
+			Thickness = 1.2,
+			Transparency = 0
+		})
+		
+		-- Add padding
+		local Padding = Create("UIPadding", {
+			Parent = NotificationFrame,
+			PaddingBottom = UDim.new(0, 12),
+			PaddingLeft = UDim.new(0, 12),
+			PaddingRight = UDim.new(0, 12),
+			PaddingTop = UDim.new(0, 12)
+		})
+		
+		-- Add list layout
+		local ListLayout = Create("UIListLayout", {
+			Parent = NotificationFrame,
+			SortOrder = Enum.SortOrder.LayoutOrder,
+			Padding = UDim.new(0, 8)
+		})
+		
+		-- Create top row (icon + title + close button)
+		local TopRow = Create("Frame", {
+			Parent = NotificationFrame,
+			Name = "TopRow",
+			Size = UDim2.new(1, 0, 0, 20),
+			BackgroundTransparency = 1,
+			LayoutOrder = 1
+		})
+		
+		-- Add icon
+		local Icon = Create("ImageLabel", {
+			Parent = TopRow,
+			Name = "Icon",
+			Size = UDim2.new(0, 20, 0, 20),
+			Position = UDim2.new(0, 0, 0, 0),
+			Image = NotificationConfig.Image,
+			ImageColor3 = Color3.fromRGB(240, 240, 240),
+			BackgroundTransparency = 1
+		})
+		
+		-- Add title
+		local Title = Create("TextLabel", {
+			Parent = TopRow,
+			Name = "Title",
+			Size = UDim2.new(1, -40, 1, 0),
+			Position = UDim2.new(0, 30, 0, 0),
+			Text = NotificationConfig.Name,
+			TextColor3 = Color3.fromRGB(240, 240, 240),
+			TextSize = 15,
+			Font = Enum.Font.GothamBold,
+			BackgroundTransparency = 1,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextTruncate = Enum.TextTruncate.AtEnd
+		})
+		
+		-- Add close button
+		local CloseBtn = Create("ImageButton", {
+			Parent = TopRow,
+			Name = "CloseBtn",
+			Size = UDim2.new(0, 16, 0, 16),
+			Position = UDim2.new(1, -16, 0, 2),
+			Image = "rbxassetid://7072725342",
+			ImageColor3 = Color3.fromRGB(180, 180, 180),
+			BackgroundTransparency = 1,
+			ZIndex = 2
+		})
+		
+		-- Add content
+		local Content = Create("TextLabel", {
+			Parent = NotificationFrame,
+			Name = "Content",
+			Size = UDim2.new(1, 0, 0, 0),
+			Text = NotificationConfig.Content,
+			TextColor3 = Color3.fromRGB(200, 200, 200),
+			TextSize = 14,
+			Font = Enum.Font.GothamSemibold,
+			BackgroundTransparency = 1,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextWrapped = true,
+			AutomaticSize = Enum.AutomaticSize.Y,
+			LayoutOrder = 2
+		})
+		
+		-- Wait for one frame to calculate sizes
+		task.wait(0.01)
+		
+		-- Set notification height
+		local contentHeight = Content.TextBounds.Y
+		local totalHeight = 50 + contentHeight
+		NotificationFrame.Size = UDim2.new(1, 0, 0, totalHeight)
+		Notification.Size = UDim2.new(1, 0, 0, totalHeight)
+		
+		-- Animate in
+		TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {
+			Position = UDim2.new(0, 0, 0, 0)
+		}):Play()
+		
+		-- Set up destroy variables
+		local destroyed = false
+		local destroyConnection
+		
+		-- Function to destroy notification
+		local function DestroyNotification()
+			if destroyed then return end
+			destroyed = true
+			
+			-- Disconnect any connections
+			if destroyConnection then
+				destroyConnection:Disconnect()
+			end
+			
+			-- Animate out
+			local exitTween = TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {
+				Position = UDim2.new(1, 10, 0, 0),
+				BackgroundTransparency = 0.6
+			})
+			
+			-- Destroy after animation
+			exitTween.Completed:Connect(function()
+				Notification:Destroy()
+			end)
+			
+			exitTween:Play()
+		end
+		
+		-- Set auto-destroy timer
+		destroyConnection = game:GetService("Debris"):AddItem(Notification, NotificationConfig.Time + 0.5)
+		
+		-- Also use a coroutine for backup
+		spawn(function()
+			task.wait(NotificationConfig.Time)
+			if not destroyed then
+				DestroyNotification()
+			end
+		end)
+		
+		-- Close button functionality
+		CloseBtn.MouseButton1Click:Connect(function()
+			DestroyNotification()
+		end)
+		
+		-- Hover effects for close button
+		CloseBtn.MouseEnter:Connect(function()
+			TweenService:Create(CloseBtn, TweenInfo.new(0.2), {
+				ImageColor3 = Color3.fromRGB(255, 255, 255)
+			}):Play()
+		end)
+		
+		CloseBtn.MouseLeave:Connect(function()
+			TweenService:Create(CloseBtn, TweenInfo.new(0.2), {
+				ImageColor3 = Color3.fromRGB(180, 180, 180)
+			}):Play()
+		end)
 	end)
 end    
 
@@ -496,49 +692,8 @@ function NexusUI:MakeWindow(WindowConfig)
 		end	
 	end
 
-	-- ================================
-	-- ENHANCED SEARCH BAR (POSITIONED HIGHER)
-	-- ================================
-	local SearchBox = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 8), {
-		Size = UDim2.new(1, -20, 0, 32),
-		Position = UDim2.new(0, 10, 0, 30), -- MOVED UP: from 50 to 30
-		BackgroundTransparency = 0.9,
-		ZIndex = 10
-	}), {
-		AddThemeObject(SetProps(MakeElement("Image", "rbxassetid://3926307971"), {
-			Size = UDim2.new(0, 20, 0, 20),
-			Position = UDim2.new(0, 8, 0, 6),
-			ImageRectOffset = Vector2.new(964, 324),
-			ImageRectSize = Vector2.new(36, 36),
-			ZIndex = 11
-		}), "TextDark"),
-		AddThemeObject(Create("TextBox", {
-			Size = UDim2.new(1, -40, 1, 0),
-			Position = UDim2.new(0, 35, 0, 0),
-			BackgroundTransparency = 1,
-			Text = "",
-			PlaceholderText = "Search tabs...",
-			PlaceholderColor3 = Color3.fromRGB(150, 150, 150),
-			TextColor3 = Color3.fromRGB(240, 240, 240),
-			TextSize = 14,
-			Font = Enum.Font.Gotham,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			ClearTextOnFocus = false,
-			ZIndex = 11
-		}), "Text"),
-		AddThemeObject(MakeElement("Stroke"), "Stroke")
-	}), "Second")
-
-	-- ================================
-	-- OPTIMIZED TAB HOLDER (WITH SCROLL PROTECTION)
-	-- ================================
-	local TabHolder = AddThemeObject(SetChildren(SetProps(MakeElement("ScrollFrame", Color3.fromRGB(255, 255, 255), 3), {
-		Size = UDim2.new(1, 0, 0, 200), -- REDUCED HEIGHT: from 240 to 200
-		Position = UDim2.new(0, 0, 0, 68), -- ADJUSTED: from 88 to 68 (30 + 32 + 6 margin)
-		BackgroundTransparency = 1,
-		ZIndex = 5,
-		ScrollingDirection = Enum.ScrollingDirection.Y,
-		BorderSizePixel = 0
+	local TabHolder = AddThemeObject(SetChildren(SetProps(MakeElement("ScrollFrame", Color3.fromRGB(255, 255, 255), 4), {
+		Size = UDim2.new(1, 0, 1, -50)
 	}), {
 		MakeElement("List"),
 		MakeElement("Padding", 8, 0, 0, 8)
@@ -546,72 +701,6 @@ function NexusUI:MakeWindow(WindowConfig)
 
 	AddConnection(TabHolder.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
 		TabHolder.CanvasSize = UDim2.new(0, 0, 0, TabHolder.UIListLayout.AbsoluteContentSize.Y + 16)
-	end)
-
-	-- Store tabs for search functionality
-	local TabButtons = {}
-
-	local function FilterTabs(searchText)
-		searchText = string.lower(searchText)
-		local anyVisible = false
-		local visibleCount = 0
-		
-		for tabName, tabButton in pairs(TabButtons) do
-			local tabNameLower = string.lower(tabName)
-			if searchText == "" or string.find(tabNameLower, searchText, 1, true) then
-				tabButton.Visible = true
-				anyVisible = true
-				visibleCount = visibleCount + 1
-			else
-				tabButton.Visible = false
-			end
-		end
-		
-		-- Calculate safe height: prevent overlap with player info section
-		local maxSafeHeight = 200 -- Maximum before hitting player info
-		local calculatedHeight = (visibleCount * 32) + 16
-		
-		-- Ensure tabs don't go below player info
-		local finalHeight = math.min(maxSafeHeight, calculatedHeight)
-		
-		TabHolder.Size = UDim2.new(1, 0, 0, finalHeight)
-		TabHolder.CanvasSize = UDim2.new(0, 0, 0, (visibleCount * 32) + 16)
-		
-		-- Add visual feedback if height is limited
-		if calculatedHeight > maxSafeHeight then
-			TabHolder.ScrollBarThickness = 5 -- Thicker scrollbar when limited
-		else
-			TabHolder.ScrollBarThickness = 3
-		end
-	end
-
-	-- Connect search functionality
-	AddConnection(SearchBox:FindFirstChildOfClass("TextBox").Changed, function(property)
-		if property == "Text" then
-			local searchText = SearchBox:FindFirstChildOfClass("TextBox").Text
-			FilterTabs(searchText)
-		end
-	end)
-
-	-- Add scrolling protection
-	AddConnection(TabHolder:GetPropertyChangedSignal("CanvasPosition"), function()
-		local maxScroll = TabHolder.CanvasSize.Y.Offset - TabHolder.AbsoluteWindowSize.Y
-		
-		-- If scrolled too close to bottom, protect player info
-		if TabHolder.CanvasPosition.Y > maxScroll - 10 then
-			TabHolder.ScrollBarThickness = 0 -- Hide scrollbar at limit
-		else
-			TabHolder.ScrollBarThickness = TabHolder.ScrollBarThickness or 3
-		end
-	end)
-
-	-- Add mouse enter/leave to improve UX
-	AddConnection(TabHolder.MouseEnter, function()
-		TabHolder.ScrollBarThickness = 5 -- Thicker when hovering
-	end)
-
-	AddConnection(TabHolder.MouseLeave, function()
-		TabHolder.ScrollBarThickness = 3
 	end)
 
 	local CloseBtn = SetChildren(SetProps(MakeElement("Button"), {
@@ -640,51 +729,9 @@ function NexusUI:MakeWindow(WindowConfig)
 		Size = UDim2.new(1, 0, 0, 50)
 	})
 
-	-- ================================
-	-- ENHANCED PLAYER INFO SECTION
-	-- ================================
-	local PlayerInfoFrame = SetChildren(SetProps(MakeElement("TFrame"), {
-		Size = UDim2.new(1, 0, 0, 60), -- INCREASED: from 50 to 60
-		Position = UDim2.new(0, 0, 1, -60), -- ADJUSTED: from -50 to -60
-		ZIndex = 15 -- Higher ZIndex to ensure it's always on top
-	}), {
-		AddThemeObject(SetProps(MakeElement("Frame", {
-			Size = UDim2.new(1, 0, 0, 1)
-		}), "Stroke"),
-		
-		-- Player profile section with improved positioning
-		AddThemeObject(SetChildren(SetProps(MakeElement("Frame", {
-			AnchorPoint = Vector2.new(0, 0.5),
-			Size = UDim2.new(0, 36, 0, 36), -- SLIGHTLY LARGER: from 32 to 36
-			Position = UDim2.new(0, 10, 0.5, 0)
-		}), {
-			SetProps(MakeElement("Image", "https://www.roblox.com/headshot-thumbnail/image?userId=".. LocalPlayer.UserId .."&width=420&height=420&format=png"), {
-				Size = UDim2.new(1, 0, 1, 0)
-			}),
-			MakeElement("Corner", 1)
-		}), "Divider"),
-		
-		-- Username labels with better positioning
-		AddThemeObject(SetProps(MakeElement("Label", LocalPlayer.DisplayName, WindowConfig.HidePremium and 14 or 13), {
-			Size = UDim2.new(1, -56, 0, 16), -- ADJUSTED for larger profile
-			Position = WindowConfig.HidePremium and UDim2.new(0, 56, 0, 20) or UDim2.new(0, 56, 0, 15),
-			Font = Enum.Font.GothamBold,
-			ClipsDescendants = true,
-			TextTruncate = Enum.TextTruncate.AtEnd -- Prevent overflow
-		}), "Text"),
-		
-		AddThemeObject(SetProps(MakeElement("Label", "@" .. LocalPlayer.Name, 11), {
-			Size = UDim2.new(1, -56, 0, 12),
-			Position = UDim2.new(0, 56, 0, 35),
-			Visible = not WindowConfig.HidePremium,
-			TextColor3 = Color3.fromRGB(180, 180, 185)
-		}), "TextDark")
-	})
-
 	local WindowStuff = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 12), {
 		Size = UDim2.new(0, 160, 1, -50),
-		Position = UDim2.new(0, 0, 0, 50),
-		ClipsDescendants = true
+		Position = UDim2.new(0, 0, 0, 50)
 	}), {
 		AddThemeObject(SetProps(MakeElement("Frame"), {
 			Size = UDim2.new(1, 0, 0, 10),
@@ -698,9 +745,47 @@ function NexusUI:MakeWindow(WindowConfig)
 			Size = UDim2.new(0, 1, 1, 0),
 			Position = UDim2.new(1, -1, 0, 0)
 		}), "Stroke"), 
-		SearchBox,
 		TabHolder,
-		PlayerInfoFrame,
+		SetChildren(SetProps(MakeElement("TFrame"), {
+			Size = UDim2.new(1, 0, 0, 50),
+			Position = UDim2.new(0, 0, 1, -50)
+		}), {
+			AddThemeObject(SetProps(MakeElement("Frame"), {
+				Size = UDim2.new(1, 0, 0, 1)
+			}), "Stroke"), 
+			AddThemeObject(SetChildren(SetProps(MakeElement("Frame"), {
+				AnchorPoint = Vector2.new(0, 0.5),
+				Size = UDim2.new(0, 32, 0, 32),
+				Position = UDim2.new(0, 10, 0.5, 0)
+			}), {
+				SetProps(MakeElement("Image", "https://www.roblox.com/headshot-thumbnail/image?userId=".. LocalPlayer.UserId .."&width=420&height=420&format=png"), {
+					Size = UDim2.new(1, 0, 1, 0)
+				}),
+				AddThemeObject(SetProps(MakeElement("Image", "rbxassetid://4031889928"), {
+					Size = UDim2.new(1, 0, 1, 0),
+				}), "Second"),
+				MakeElement("Corner", 1)
+			}), "Divider"),
+			SetChildren(SetProps(MakeElement("TFrame"), {
+				AnchorPoint = Vector2.new(0, 0.5),
+				Size = UDim2.new(0, 32, 0, 32),
+				Position = UDim2.new(0, 10, 0.5, 0)
+			}), {
+				AddThemeObject(MakeElement("Stroke"), "Stroke"),
+				MakeElement("Corner", 1)
+			}),
+			AddThemeObject(SetProps(MakeElement("Label", LocalPlayer.DisplayName, WindowConfig.HidePremium and 14 or 13), {
+				Size = UDim2.new(1, -60, 0, 13),
+				Position = WindowConfig.HidePremium and UDim2.new(0, 50, 0, 19) or UDim2.new(0, 50, 0, 12),
+				Font = Enum.Font.GothamBold,
+				ClipsDescendants = true
+			}), "Text"),
+			AddThemeObject(SetProps(MakeElement("Label", "", 12), {
+				Size = UDim2.new(1, -60, 0, 12),
+				Position = UDim2.new(0, 50, 1, -25),
+				Visible = not WindowConfig.HidePremium
+			}), "TextDark")
+		}),
 	}), "Second")
 
 	local WindowName = AddThemeObject(SetProps(MakeElement("Label", WindowConfig.Name, 14), {
@@ -837,30 +922,24 @@ function NexusUI:MakeWindow(WindowConfig)
 		TabConfig.PremiumOnly = TabConfig.PremiumOnly or false
 
 		local TabFrame = SetChildren(SetProps(MakeElement("Button"), {
-			Size = UDim2.new(1, -20, 0, 32),
-			Parent = TabHolder,
-			ZIndex = 6
+			Size = UDim2.new(1, 0, 0, 32),
+			Parent = TabHolder
 		}), {
 			AddThemeObject(SetProps(MakeElement("Image", TabConfig.Icon), {
 				AnchorPoint = Vector2.new(0, 0.5),
 				Size = UDim2.new(0, 18, 0, 18),
 				Position = UDim2.new(0, 10, 0.5, 0),
 				ImageTransparency = 0.4,
-				Name = "Ico",
-				ZIndex = 7
+				Name = "Ico"
 			}), "Text"),
 			AddThemeObject(SetProps(MakeElement("Label", TabConfig.Name, 14), {
 				Size = UDim2.new(1, -35, 1, 0),
 				Position = UDim2.new(0, 35, 0, 0),
 				Font = Enum.Font.GothamSemibold,
 				TextTransparency = 0.4,
-				Name = "Title",
-				ZIndex = 7
+				Name = "Title"
 			}), "Text")
 		})
-
-		-- Store tab for search functionality
-		TabButtons[TabConfig.Name] = TabFrame
 
 		if GetIcon(TabConfig.Icon) ~= nil then
 			TabFrame.Ico.Image = GetIcon(TabConfig.Icon)
@@ -1841,19 +1920,19 @@ local RunService = game:GetService("RunService")
 
 local LocalPlayer = Players.LocalPlayer
 
---// ScreenGui
+--// ScreenGui untuk tombol toggle
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "ToggleUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
---// Button
+--// Tombol toggle di atas tengah
 local Toggle = Instance.new("TextButton")
 Toggle.Name = "Toggle"
 Toggle.Parent = ScreenGui
 Toggle.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 Toggle.BackgroundTransparency = 0.3
-Toggle.Position = UDim2.new(0, 10, 0.4, 0)
+Toggle.Position = UDim2.new(0.5, -75, 0, 10) -- Posisi di atas tengah
 Toggle.Size = UDim2.new(0, 150, 0, 40)
 Toggle.Text = "NexusUI   |   +"
 Toggle.TextColor3 = Color3.fromRGB(240, 240, 240)
@@ -1867,12 +1946,22 @@ local Corner = Instance.new("UICorner")
 Corner.CornerRadius = UDim.new(0.2, 0)
 Corner.Parent = Toggle
 
---// Stroke
+--// Stroke dengan rainbow effect
 local Stroke = Instance.new("UIStroke")
 Stroke.Parent = Toggle
-Stroke.Color = Color3.fromRGB(70, 0, 255)
+Stroke.Color = Color3.fromHSV(0, 1, 1) -- Warna awal merah
 Stroke.Thickness = 1.5
 Stroke.Transparency = 0.3
+
+--// Rainbow effect untuk stroke tombol toggle
+spawn(function()
+	while true do
+		local time = tick() * 1 -- Kecepatan rainbow
+		local hue = (time % 6) / 6
+		Stroke.Color = Color3.fromHSV(hue, 1, 1)
+		RunService.RenderStepped:Wait()
+	end
+end)
 
 --// Hover effect
 Toggle.MouseEnter:Connect(function()
@@ -1927,6 +2016,36 @@ Nexus:GetPropertyChangedSignal("Enabled"):Connect(function()
 			Toggle.Text = "NexusUI   |   +"
 		end
 	end
+end)
+
+--// Functions untuk kontrol rainbow effect
+function NexusUI:SetRainbowEnabled(enabled)
+	NexusUI.RainbowEnabled = enabled
+	if not enabled then
+		SetTheme() -- Reset ke tema default jika rainbow dimatikan
+	end
+end
+
+function NexusUI:SetRainbowSpeed(speed)
+	NexusUI.RainbowSpeed = speed
+end
+
+function NexusUI:SetRainbowSaturation(saturation)
+	NexusUI.RainbowSaturation = saturation
+end
+
+function NexusUI:SetRainbowValue(value)
+	NexusUI.RainbowValue = value
+end
+
+-- Test notification (opsional, bisa dihapus)
+spawn(function()
+	task.wait(3)
+	NexusUI:MakeNotification({
+		Name = "Nexus UI",
+		Content = "UI loaded successfully! Click the button at the top center to toggle.",
+		Time = 5
+	})
 end)
 
 return NexusUI
