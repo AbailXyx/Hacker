@@ -395,274 +395,684 @@ CreateElement("Label", function(Text, TextSize, Transparency)
 	return Label
 end)
 
-local NotificationHolder = Create("Frame", {
-	Parent = Nexus,
-	Name = "NotificationHolder",
-	BackgroundTransparency = 1,
-	Size = UDim2.new(0, 300, 1, -25),
-	Position = UDim2.new(1, -325, 0, 25),
-	AnchorPoint = Vector2.new(1, 0),
-	ClipsDescendants = false
+-- Notification Holder dengan fungsi yang sudah ada
+local NotificationHolder = SetProps(SetChildren(MakeElement("TFrame"), {
+    SetProps(MakeElement("List"), {
+        HorizontalAlignment = Enum.HorizontalAlignment.Right,
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        VerticalAlignment = Enum.VerticalAlignment.Bottom,
+        Padding = UDim.new(0, 6)
+    })
+}), {
+    Position = UDim2.new(1, -15, 1, -15),
+    Size = UDim2.new(0, 280, 1, -40),
+    AnchorPoint = Vector2.new(1, 1),
+    Parent = Nexus,
+    BackgroundTransparency = 1,
+    Name = "NotificationHolder",
+    ClipsDescendants = true
 })
 
-local NotificationList = Create("UIListLayout", {
-	Parent = NotificationHolder,
-	SortOrder = Enum.SortOrder.LayoutOrder,
-	VerticalAlignment = Enum.VerticalAlignment.Bottom,
-	Padding = UDim.new(0, 10)
-})
+-- Rainbow configuration
+local NotificationRainbowEnabled = true
+local NotificationRainbowSpeed = 1.5
 
-local NotificationPadding = Create("UIPadding", {
-	Parent = NotificationHolder,
-	PaddingBottom = UDim.new(0, 10),
-	PaddingRight = UDim.new(0, 10)
-})
-
--- Rainbow effect function
-local function UpdateRainbowColors()
-	if not NexusUI.RainbowEnabled then return end
-	
-	local time = tick() * NexusUI.RainbowSpeed
-	local hue = (time % 6) / 6
-	local rainbowColor = Color3.fromHSV(hue, NexusUI.RainbowSaturation, NexusUI.RainbowValue)
-	
-	-- Update all stroke objects
-	if NexusUI.ThemeObjects and NexusUI.ThemeObjects["Stroke"] then
-		for _, obj in ipairs(NexusUI.ThemeObjects["Stroke"]) do
-			if obj and obj.Parent then
-				local property = ReturnProperty(obj)
-				if property then
-					obj[property] = rainbowColor
-				end
-			end
-		end
-	end
-	
-	-- Update toggle button stroke
-	if Toggle and Toggle:FindFirstChild("UIStroke") then
-		Toggle.UIStroke.Color = rainbowColor
-	end
+-- Function untuk update rainbow color
+local function UpdateRainbowColor(stroke)
+    if not stroke or not NotificationRainbowEnabled then return end
+    
+    local time = tick() * NotificationRainbowSpeed
+    local hue = (time % 6) / 6
+    stroke.Color = Color3.fromHSV(hue, 1, 1)
 end
 
--- Start rainbow effect loop
+-- Function untuk membuat notification dengan rainbow
+function NexusUI:MakeNotification(NotificationConfig)
+    spawn(function()
+        -- Set default values
+        NotificationConfig.Name = NotificationConfig.Name or "Notification"
+        NotificationConfig.Content = NotificationConfig.Content or "Test"
+        NotificationConfig.Image = NotificationConfig.Image or "rbxassetid://4384403532"
+        NotificationConfig.Time = NotificationConfig.Time or 4
+        
+        -- Create compact notification parent
+        local NotificationParent = SetProps(MakeElement("TFrame"), {
+            Size = UDim2.new(1, 0, 0, 0),
+            AutomaticSize = Enum.AutomaticSize.Y,
+            Parent = NotificationHolder,
+            LayoutOrder = #NotificationHolder:GetChildren()
+        })
+        
+        -- Compact notification frame dengan rainbow stroke
+        local NotificationFrame = SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(25, 25, 25), 0, 8), {
+            Parent = NotificationParent, 
+            Size = UDim2.new(1, 0, 0, 0),
+            Position = UDim2.new(1, 15, 0, 0),
+            BackgroundTransparency = 0,
+            AutomaticSize = Enum.AutomaticSize.Y
+        }), {
+            -- Rainbow stroke
+            SetProps(MakeElement("Stroke", Color3.fromHSV(0, 1, 1), 1), { -- Start dengan warna merah
+                Name = "UIStroke"
+            }),
+            
+            -- Compact padding
+            MakeElement("Padding", 10, 10, 10, 10),
+            
+            -- Smaller icon
+            SetProps(MakeElement("Image", NotificationConfig.Image), {
+                Size = UDim2.new(0, 16, 0, 16),
+                ImageColor3 = Color3.fromRGB(240, 240, 240),
+                Name = "Icon"
+            }),
+            
+            -- Compact title
+            SetProps(MakeElement("Label", NotificationConfig.Name, 13), {
+                Size = UDim2.new(1, -26, 0, 16),
+                Position = UDim2.new(0, 26, 0, 0),
+                Font = Enum.Font.GothamBold,
+                Name = "Title",
+                TextColor3 = Color3.fromRGB(240, 240, 240),
+                TextTruncate = Enum.TextTruncate.AtEnd
+            }),
+            
+            -- Small close button
+            SetProps(MakeElement("ImageButton"), {
+                Size = UDim2.new(0, 12, 0, 12),
+                Position = UDim2.new(1, -12, 0, 10),
+                Image = "rbxassetid://7072725342",
+                ImageColor3 = Color3.fromRGB(150, 150, 150),
+                BackgroundTransparency = 1,
+                Name = "CloseBtn",
+                Visible = false
+            }),
+            
+            -- Compact content
+            SetProps(MakeElement("Label", NotificationConfig.Content, 12), {
+                Size = UDim2.new(1, 0, 0, 0),
+                Position = UDim2.new(0, 0, 0, 20),
+                Font = Enum.Font.GothamSemibold,
+                Name = "Content",
+                AutomaticSize = Enum.AutomaticSize.Y,
+                TextColor3 = Color3.fromRGB(200, 200, 200),
+                TextWrapped = true,
+                LineHeight = 1.1
+            })
+        })
+        
+        -- Rainbow update connection untuk notification ini
+        local rainbowConnection
+        if NotificationRainbowEnabled then
+            rainbowConnection = RunService.RenderStepped:Connect(function()
+                if NotificationFrame and NotificationFrame.Parent then
+                    local stroke = NotificationFrame:FindFirstChild("UIStroke")
+                    if stroke then
+                        UpdateRainbowColor(stroke)
+                    end
+                else
+                    -- Cleanup jika notification sudah dihancurkan
+                    if rainbowConnection then
+                        rainbowConnection:Disconnect()
+                    end
+                end
+            end)
+        end
+        
+        -- Wait for layout
+        task.wait(0.01)
+        
+        -- Calculate compact height
+        local contentHeight = NotificationFrame.Content.TextBounds.Y
+        local totalHeight = math.min(90, 35 + math.min(contentHeight, 50))
+        
+        if contentHeight > 50 then
+            NotificationFrame.Content.Size = UDim2.new(1, 0, 0, 50)
+            NotificationFrame.Content.Text = string.sub(NotificationConfig.Content, 1, 80) .. "..."
+            totalHeight = 85
+        end
+        
+        NotificationFrame.Size = UDim2.new(1, 0, 0, totalHeight)
+        NotificationParent.Size = UDim2.new(1, 0, 0, totalHeight)
+        
+        -- Quick slide in
+        TweenService:Create(NotificationFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+            Position = UDim2.new(0, 0, 0, 0)
+        }):Play()
+        
+        -- Fast destroy function
+        local function DestroyNotification()
+            -- Disconnect rainbow connection
+            if rainbowConnection then
+                rainbowConnection:Disconnect()
+            end
+            
+            -- Quick fade out
+            TweenService:Create(NotificationFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                BackgroundTransparency = 0.5,
+                Position = UDim2.new(1, 10, 0, 0)
+            }):Play()
+            
+            TweenService:Create(NotificationFrame.UIStroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                Transparency = 0.8
+            }):Play()
+            
+            TweenService:Create(NotificationFrame.Title, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                TextTransparency = 0.6
+            }):Play()
+            
+            TweenService:Create(NotificationFrame.Content, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                TextTransparency = 0.7
+            }):Play()
+            
+            wait(0.25)
+            if NotificationParent.Parent then
+                NotificationParent:Destroy()
+            end
+        end
+        
+        -- Auto-destroy
+        spawn(function()
+            if NotificationConfig.Time > 0 then
+                wait(NotificationConfig.Time)
+                DestroyNotification()
+            end
+        end)
+        
+        -- Hover effects
+        NotificationFrame.MouseEnter:Connect(function()
+            NotificationFrame.CloseBtn.Visible = true
+            TweenService:Create(NotificationFrame, TweenInfo.new(0.15), {
+                BackgroundColor3 = Color3.fromRGB(28, 28, 33)
+            }):Play()
+        end)
+        
+        NotificationFrame.MouseLeave:Connect(function()
+            NotificationFrame.CloseBtn.Visible = false
+            TweenService:Create(NotificationFrame, TweenInfo.new(0.15), {
+                BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+            }):Play()
+        end)
+        
+        NotificationFrame.CloseBtn.MouseButton1Click:Connect(function()
+            DestroyNotification()
+        end)
+        
+        -- Close button hover
+        NotificationFrame.CloseBtn.MouseEnter:Connect(function()
+            TweenService:Create(NotificationFrame.CloseBtn, TweenInfo.new(0.1), {
+                ImageColor3 = Color3.fromRGB(255, 100, 100),
+                Size = UDim2.new(0, 14, 0, 14)
+            }):Play()
+        end)
+        
+        NotificationFrame.CloseBtn.MouseLeave:Connect(function()
+            TweenService:Create(NotificationFrame.CloseBtn, TweenInfo.new(0.1), {
+                ImageColor3 = Color3.fromRGB(150, 150, 150),
+                Size = UDim2.new(0, 12, 0, 12)
+            }):Play()
+        end)
+    end)
+end
+
+-- Control functions untuk rainbow
+function NexusUI:SetNotificationRainbow(enabled)
+    NotificationRainbowEnabled = enabled
+end
+
+function NexusUI:SetNotificationRainbowSpeed(speed)
+    NotificationRainbowSpeed = speed
+end
+
+-- Test notification
 spawn(function()
-	while true do
-		UpdateRainbowColors()
-		RunService.RenderStepped:Wait()
-	end
+    task.wait(1)
+    NexusUI:MakeNotification({
+        Name = "Rainbow Mode",
+        Content = "Border berubah warna rainbow!",
+        Image = "rbxassetid://6035067836",
+        Time = 5
+    })
 end)
 
-function NexusUI:MakeNotification(NotificationConfig)
-	spawn(function()
-		-- Set default values
-		NotificationConfig.Name = NotificationConfig.Name or "Notification"
-		NotificationConfig.Content = NotificationConfig.Content or "Test"
-		NotificationConfig.Image = NotificationConfig.Image or "rbxassetid://4384403532"
-		NotificationConfig.Time = NotificationConfig.Time or 5
-		
-		-- Create notification container
-		local Notification = Create("Frame", {
-			Parent = NotificationHolder,
-			Name = "Notification",
-			Size = UDim2.new(1, 0, 0, 0),
-			BackgroundTransparency = 1,
-			ClipsDescendants = true,
-			LayoutOrder = 9999999 - tick(), -- Ensure new notifications appear at bottom
-			AutomaticSize = Enum.AutomaticSize.Y
-		})
-		
-		-- Create notification frame
-		local NotificationFrame = Create("Frame", {
-			Parent = Notification,
-			Name = "Frame",
-			Size = UDim2.new(1, 0, 0, 0),
-			Position = UDim2.new(1, 10, 0, 0),
-			BackgroundColor3 = Color3.fromRGB(25, 25, 25),
-			BackgroundTransparency = 0,
-			AutomaticSize = Enum.AutomaticSize.Y,
-			ClipsDescendants = true
-		})
-		
-		-- Add corner
-		local Corner = Create("UICorner", {
-			Parent = NotificationFrame,
-			CornerRadius = UDim.new(0, 12)
-		})
-		
-		-- Add stroke (not rainbow)
-		local Stroke = Create("UIStroke", {
-			Parent = NotificationFrame,
-			Color = Color3.fromRGB(70, 0, 255),
-			Thickness = 1.2,
-			Transparency = 0
-		})
-		
-		-- Add padding
-		local Padding = Create("UIPadding", {
-			Parent = NotificationFrame,
-			PaddingBottom = UDim.new(0, 12),
-			PaddingLeft = UDim.new(0, 12),
-			PaddingRight = UDim.new(0, 12),
-			PaddingTop = UDim.new(0, 12)
-		})
-		
-		-- Add list layout
-		local ListLayout = Create("UIListLayout", {
-			Parent = NotificationFrame,
-			SortOrder = Enum.SortOrder.LayoutOrder,
-			Padding = UDim.new(0, 8)
-		})
-		
-		-- Create top row (icon + title + close button)
-		local TopRow = Create("Frame", {
-			Parent = NotificationFrame,
-			Name = "TopRow",
-			Size = UDim2.new(1, 0, 0, 20),
-			BackgroundTransparency = 1,
-			LayoutOrder = 1
-		})
-		
-		-- Add icon
-		local Icon = Create("ImageLabel", {
-			Parent = TopRow,
-			Name = "Icon",
-			Size = UDim2.new(0, 20, 0, 20),
-			Position = UDim2.new(0, 0, 0, 0),
-			Image = NotificationConfig.Image,
-			ImageColor3 = Color3.fromRGB(240, 240, 240),
-			BackgroundTransparency = 1
-		})
-		
-		-- Add title
-		local Title = Create("TextLabel", {
-			Parent = TopRow,
-			Name = "Title",
-			Size = UDim2.new(1, -40, 1, 0),
-			Position = UDim2.new(0, 30, 0, 0),
-			Text = NotificationConfig.Name,
-			TextColor3 = Color3.fromRGB(240, 240, 240),
-			TextSize = 15,
-			Font = Enum.Font.GothamBold,
-			BackgroundTransparency = 1,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			TextTruncate = Enum.TextTruncate.AtEnd
-		})
-		
-		-- Add close button
-		local CloseBtn = Create("ImageButton", {
-			Parent = TopRow,
-			Name = "CloseBtn",
-			Size = UDim2.new(0, 16, 0, 16),
-			Position = UDim2.new(1, -16, 0, 2),
-			Image = "rbxassetid://7072725342",
-			ImageColor3 = Color3.fromRGB(180, 180, 180),
-			BackgroundTransparency = 1,
-			ZIndex = 2
-		})
-		
-		-- Add content
-		local Content = Create("TextLabel", {
-			Parent = NotificationFrame,
-			Name = "Content",
-			Size = UDim2.new(1, 0, 0, 0),
-			Text = NotificationConfig.Content,
-			TextColor3 = Color3.fromRGB(200, 200, 200),
-			TextSize = 14,
-			Font = Enum.Font.GothamSemibold,
-			BackgroundTransparency = 1,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			TextWrapped = true,
-			AutomaticSize = Enum.AutomaticSize.Y,
-			LayoutOrder = 2
-		})
-		
-		-- Wait for one frame to calculate sizes
-		task.wait(0.01)
-		
-		-- Set notification height
-		local contentHeight = Content.TextBounds.Y
-		local totalHeight = 50 + contentHeight
-		NotificationFrame.Size = UDim2.new(1, 0, 0, totalHeight)
-		Notification.Size = UDim2.new(1, 0, 0, totalHeight)
-		
-		-- Animate in
-		TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {
-			Position = UDim2.new(0, 0, 0, 0)
-		}):Play()
-		
-		-- Set up destroy variables
-		local destroyed = false
-		local destroyConnection
-		
-		-- Function to destroy notification
-		local function DestroyNotification()
-			if destroyed then return end
-			destroyed = true
-			
-			-- Disconnect any connections
-			if destroyConnection then
-				destroyConnection:Disconnect()
-			end
-			
-			-- Animate out
-			local exitTween = TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {
-				Position = UDim2.new(1, 10, 0, 0),
-				BackgroundTransparency = 0.6
-			})
-			
-			-- Destroy after animation
-			exitTween.Completed:Connect(function()
-				Notification:Destroy()
-			end)
-			
-			exitTween:Play()
-		end
-		
-		-- Set auto-destroy timer
-		destroyConnection = game:GetService("Debris"):AddItem(Notification, NotificationConfig.Time + 0.5)
-		
-		-- Also use a coroutine for backup
-		spawn(function()
-			task.wait(NotificationConfig.Time)
-			if not destroyed then
-				DestroyNotification()
-			end
-		end)
-		
-		-- Close button functionality
-		CloseBtn.MouseButton1Click:Connect(function()
-			DestroyNotification()
-		end)
-		
-		-- Hover effects for close button
-		CloseBtn.MouseEnter:Connect(function()
-			TweenService:Create(CloseBtn, TweenInfo.new(0.2), {
-				ImageColor3 = Color3.fromRGB(255, 255, 255)
-			}):Play()
-		end)
-		
-		CloseBtn.MouseLeave:Connect(function()
-			TweenService:Create(CloseBtn, TweenInfo.new(0.2), {
-				ImageColor3 = Color3.fromRGB(180, 180, 180)
-			}):Play()
-		end)
-	end)
-end    
+-- SEARCH SYSTEM --------------------------------------------------------------
 
-function NexusUI:Init()
-	if NexusUI.SaveCfg then	
-		pcall(function()
-			if isfile(NexusUI.Folder .. "/" .. game.GameId .. ".txt") then
-				LoadCfg(readfile(NexusUI.Folder .. "/" .. game.GameId .. ".txt"))
-				NexusUI:MakeNotification({
-					Name = "Configuration",
-					Content = "Auto-loaded configuration for the game " .. game.GameId .. ".",
-					Time = 5
-				})
-			end
-		end)		
-	end	
-end	
+-- Tambahkan search bar di atas window
+local function AddSearchSystem(MainWindow, TabHolder)
+    -- Search icon di pojok kiri atas (dekat minimize/close)
+    local SearchIcon = SetChildren(SetProps(MakeElement("ImageButton"), {
+        Size = UDim2.new(0, 20, 0, 20),
+        Position = UDim2.new(0, 25, 0, 15),
+        Image = "rbxassetid://6031094674", -- Search icon (🔎)
+        ImageColor3 = Color3.fromRGB(180, 180, 185),
+        BackgroundTransparency = 1,
+        Name = "SearchIcon",
+        Parent = MainWindow.TopBar,
+        Visible = true
+    }), {
+        AddThemeObject(MakeElement("Stroke", Color3.fromRGB(100, 100, 105), 1), "Stroke")
+    })
+    
+    -- Search container (hidden by default)
+    local SearchContainer = SetProps(MakeElement("TFrame"), {
+        Size = UDim2.new(0, 250, 0, 35),
+        Position = UDim2.new(0, 50, 0, 10),
+        BackgroundTransparency = 1,
+        Parent = MainWindow.TopBar,
+        Visible = false,
+        Name = "SearchContainer"
+    })
+    
+    -- Search box
+    local SearchBox = SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(30, 30, 35), 0, 6), {
+        Size = UDim2.new(1, 0, 1, 0),
+        Parent = SearchContainer
+    }), {
+        AddThemeObject(MakeElement("Stroke", Color3.fromRGB(70, 70, 75), 1), "Stroke"),
+        MakeElement("Padding", 8, 8, 8, 8),
+        
+        -- Search input
+        SetProps(MakeElement("TextBox"), {
+            Size = UDim2.new(1, -30, 1, 0),
+            PlaceholderText = "Search tabs...",
+            PlaceholderColor3 = Color3.fromRGB(140, 140, 145),
+            Text = "",
+            TextColor3 = Color3.fromRGB(240, 240, 240),
+            TextSize = 14,
+            Font = Enum.Font.Gotham,
+            BackgroundTransparency = 1,
+            ClearTextOnFocus = false,
+            Name = "SearchInput"
+        }),
+        
+        -- Clear button
+        SetProps(MakeElement("ImageButton"), {
+            Size = UDim2.new(0, 20, 0, 20),
+            Position = UDim2.new(1, -25, 0.5, 0),
+            AnchorPoint = Vector2.new(1, 0.5),
+            Image = "rbxassetid://7072725342", -- X icon
+            ImageColor3 = Color3.fromRGB(150, 150, 155),
+            BackgroundTransparency = 1,
+            Visible = false,
+            Name = "ClearButton"
+        })
+    })
+    
+    -- Results container (dropdown)
+    local SearchResults = SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(25, 25, 30), 0, 6), {
+        Size = UDim2.new(1, 0, 0, 0),
+        Position = UDim2.new(0, 0, 1, 5),
+        BackgroundTransparency = 0,
+        Parent = SearchContainer,
+        Visible = false,
+        ClipsDescendants = true,
+        Name = "SearchResults",
+        ZIndex = 100
+    }), {
+        AddThemeObject(MakeElement("Stroke", Color3.fromRGB(60, 60, 65), 1), "Stroke"),
+        MakeElement("Padding", 5, 5, 5, 5),
+        
+        -- List layout untuk results
+        SetProps(MakeElement("List"), {
+            SortOrder = Enum.SortOrder.LayoutOrder,
+            Padding = UDim.new(0, 3)
+        }),
+        
+        -- Scroll frame jika banyak results
+        SetProps(MakeElement("ScrollFrame", Color3.fromRGB(80, 80, 85), 3), {
+            Size = UDim2.new(1, 0, 1, 0),
+            CanvasSize = UDim2.new(0, 0, 0, 0),
+            ScrollingEnabled = true,
+            ScrollBarThickness = 3,
+            Name = "ResultsScroll"
+        })
+    })
+    
+    -- Track semua tabs untuk search
+    local AllTabs = {}
+    local SearchActive = false
+    
+    -- Function untuk mengumpulkan semua tabs
+    local function CollectTabs()
+        AllTabs = {}
+        for _, tabButton in ipairs(TabHolder:GetChildren()) do
+            if tabButton:IsA("TextButton") then
+                local tabName = tabButton.Title.Text
+                local tabIcon = tabButton.Ico.Image
+                AllTabs[tabName] = {
+                    Button = tabButton,
+                    Name = tabName,
+                    Icon = tabIcon,
+                    OriginalVisible = true
+                }
+            end
+        end
+    end
+    
+    -- Function untuk search/filter tabs
+    local function FilterTabs(searchText)
+        searchText = string.lower(searchText or "")
+        
+        if searchText == "" then
+            -- Show all tabs
+            for _, tabData in pairs(AllTabs) do
+                tabData.Button.Visible = true
+            end
+            SearchResults.Visible = false
+            return
+        end
+        
+        local foundTabs = {}
+        
+        -- Clear previous results
+        for _, child in ipairs(SearchResults.ResultsScroll:GetChildren()) do
+            if child:IsA("TextButton") then
+                child:Destroy()
+            end
+        end
+        
+        -- Search through tabs
+        for tabName, tabData in pairs(AllTabs) do
+            local lowerTabName = string.lower(tabName)
+            
+            -- Simple string matching (bisa diperluas dengan fuzzy search)
+            if string.find(lowerTabName, searchText) then
+                table.insert(foundTabs, tabData)
+                tabData.Button.Visible = true
+            else
+                tabData.Button.Visible = false
+            end
+        end
+        
+        -- Show results dropdown jika ada hasil
+        if #foundTabs > 0 then
+            SearchResults.Visible = true
+            
+            -- Sort results alphabetically
+            table.sort(foundTabs, function(a, b)
+                return string.lower(a.Name) < string.lower(b.Name)
+            end)
+            
+            -- Create result buttons
+            for _, tabData in ipairs(foundTabs) do
+                local resultButton = SetChildren(SetProps(MakeElement("Button"), {
+                    Size = UDim2.new(1, 0, 0, 30),
+                    BackgroundColor3 = Color3.fromRGB(35, 35, 40),
+                    BackgroundTransparency = 0,
+                    Parent = SearchResults.ResultsScroll,
+                    AutoButtonColor = false,
+                    Name = "Result_" .. tabData.Name
+                }), {
+                    MakeElement("Corner", 0, 4),
+                    
+                    -- Tab icon
+                    SetProps(MakeElement("Image", tabData.Icon), {
+                        Size = UDim2.new(0, 16, 0, 16),
+                        Position = UDim2.new(0, 8, 0.5, 0),
+                        AnchorPoint = Vector2.new(0, 0.5),
+                        ImageColor3 = Color3.fromRGB(200, 200, 205),
+                        ImageTransparency = 0.3
+                    }),
+                    
+                    -- Tab name
+                    SetProps(MakeElement("Label", tabData.Name, 13), {
+                        Size = UDim2.new(1, -30, 1, 0),
+                        Position = UDim2.new(0, 30, 0, 0),
+                        TextColor3 = Color3.fromRGB(220, 220, 225),
+                        TextXAlignment = Enum.TextXAlignment.Left
+                    }),
+                    
+                    -- Highlight matching text
+                    SetProps(MakeElement("Label", "", 13), {
+                        Size = UDim2.new(1, -30, 1, 0),
+                        Position = UDim2.new(0, 30, 0, 0),
+                        TextColor3 = Color3.fromRGB(70, 0, 255),
+                        TextXAlignment = Enum.TextXAlignment.Left,
+                        Visible = false,
+                        Name = "Highlight"
+                    })
+                })
+                
+                -- Highlight matching text
+                local lowerName = string.lower(tabData.Name)
+                local searchStart, searchEnd = string.find(lowerName, searchText)
+                
+                if searchStart then
+                    local beforeText = string.sub(tabData.Name, 1, searchStart - 1)
+                    local matchedText = string.sub(tabData.Name, searchStart, searchEnd)
+                    local afterText = string.sub(tabData.Name, searchEnd + 1)
+                    
+                    resultButton.TextLabel.Text = beforeText
+                    resultButton.Highlight.Text = matchedText
+                    resultButton.Highlight.Visible = true
+                    
+                    -- Adjust positions
+                    local beforeSize = game:GetService("TextService"):GetTextSize(
+                        beforeText, 
+                        13, 
+                        Enum.Font.Gotham, 
+                        Vector2.new(1000, 30)
+                    )
+                    
+                    resultButton.Highlight.Position = UDim2.new(0, 30 + beforeSize.X, 0, 0)
+                    
+                    if afterText ~= "" then
+                        local afterLabel = SetProps(MakeElement("Label", afterText, 13), {
+                            Size = UDim2.new(1, -30, 1, 0),
+                            Position = UDim2.new(0, 30 + beforeSize.X + resultButton.Highlight.TextBounds.X, 0, 0),
+                            TextColor3 = Color3.fromRGB(220, 220, 225),
+                            TextXAlignment = Enum.TextXAlignment.Left
+                        })
+                        afterLabel.Parent = resultButton
+                    end
+                end
+                
+                -- Hover effect
+                resultButton.MouseEnter:Connect(function()
+                    TweenService:Create(resultButton, TweenInfo.new(0.15), {
+                        BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+                    }):Play()
+                end)
+                
+                resultButton.MouseLeave:Connect(function()
+                    TweenService:Create(resultButton, TweenInfo.new(0.15), {
+                        BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+                    }):Play()
+                end)
+                
+                -- Click to select tab
+                resultButton.MouseButton1Click:Connect(function()
+                    -- Simulate clicking the actual tab button
+                    tabData.Button.MouseButton1Click:Fire()
+                    
+                    -- Hide search
+                    SearchContainer.Visible = false
+                    SearchIcon.Visible = true
+                    SearchActive = false
+                    
+                    -- Reset all tabs visibility
+                    for _, allTabData in pairs(AllTabs) do
+                        allTabData.Button.Visible = true
+                    end
+                    
+                    -- Clear search
+                    SearchBox.SearchInput.Text = ""
+                    SearchResults.Visible = false
+                end)
+            end
+            
+            -- Adjust results height
+            local maxHeight = math.min(200, #foundTabs * 33 + 10)
+            SearchResults.Size = UDim2.new(1, 0, 0, maxHeight)
+            SearchResults.ResultsScroll.CanvasSize = UDim2.new(0, 0, 0, #foundTabs * 33)
+        else
+            SearchResults.Visible = true
+            
+            -- No results message
+            local noResults = SetProps(MakeElement("Label", "No tabs found", 13), {
+                Size = UDim2.new(1, 0, 0, 30),
+                TextColor3 = Color3.fromRGB(150, 150, 155),
+                TextTransparency = 0.5,
+                TextXAlignment = Enum.TextXAlignment.Center,
+                Parent = SearchResults.ResultsScroll
+            })
+            
+            SearchResults.Size = UDim2.new(1, 0, 0, 40)
+            SearchResults.ResultsScroll.CanvasSize = UDim2.new(0, 0, 0, 40)
+        end
+    end
+    
+    -- Collect tabs on initialization
+    spawn(function()
+        wait(1) -- Wait for tabs to be created
+        CollectTabs()
+    end)
+    
+    -- Search icon click
+    SearchIcon.MouseButton1Click:Connect(function()
+        SearchActive = not SearchActive
+        SearchContainer.Visible = SearchActive
+        SearchIcon.Visible = not SearchActive
+        
+        if SearchActive then
+            -- Focus search box
+            wait(0.1)
+            SearchBox.SearchInput:CaptureFocus()
+            CollectTabs() -- Refresh tab list
+        else
+            -- Reset visibility
+            for _, tabData in pairs(AllTabs) do
+                tabData.Button.Visible = true
+            end
+            SearchBox.SearchInput.Text = ""
+            SearchResults.Visible = false
+        end
+    })
+    
+    -- Search input events
+    SearchBox.SearchInput:GetPropertyChangedSignal("Text"):Connect(function()
+        local text = SearchBox.SearchInput.Text
+        SearchBox.ClearButton.Visible = text ~= ""
+        FilterTabs(text)
+    end)
+    
+    -- Clear button
+    SearchBox.ClearButton.MouseButton1Click:Connect(function()
+        SearchBox.SearchInput.Text = ""
+        SearchBox.SearchInput:CaptureFocus()
+    end)
+    
+    -- Close search when clicking outside
+    local function CloseSearch()
+        if SearchActive then
+            SearchActive = false
+            SearchContainer.Visible = false
+            SearchIcon.Visible = true
+            
+            -- Reset visibility
+            for _, tabData in pairs(AllTabs) do
+                tabData.Button.Visible = true
+            end
+            SearchBox.SearchInput.Text = ""
+            SearchResults.Visible = false
+        end
+    end
+    
+    -- Click outside to close
+    UserInputService.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if SearchActive then
+                local mousePos = input.Position
+                local searchAbsPos = SearchContainer.AbsolutePosition
+                local searchAbsSize = SearchContainer.AbsoluteSize
+                
+                -- Check if click is outside search area
+                if not (mousePos.X >= searchAbsPos.X and mousePos.X <= searchAbsPos.X + searchAbsSize.X and
+                       mousePos.Y >= searchAbsPos.Y and mousePos.Y <= searchAbsPos.Y + searchAbsSize.Y + SearchResults.AbsoluteSize.Y) then
+                    CloseSearch()
+                end
+            end
+        elseif input.KeyCode == Enum.KeyCode.Escape then
+            CloseSearch()
+        end
+    end)
+    
+    -- Hover effects untuk search icon
+    SearchIcon.MouseEnter:Connect(function()
+        TweenService:Create(SearchIcon, TweenInfo.new(0.2), {
+            ImageColor3 = Color3.fromRGB(240, 240, 240)
+        }):Play()
+        TweenService:Create(SearchIcon.UIStroke, TweenInfo.new(0.2), {
+            Color = Color3.fromRGB(120, 120, 125)
+        }):Play()
+    end)
+    
+    SearchIcon.MouseLeave:Connect(function()
+        TweenService:Create(SearchIcon, TweenInfo.new(0.2), {
+            ImageColor3 = Color3.fromRGB(180, 180, 185)
+        }):Play()
+        TweenService:Create(SearchIcon.UIStroke, TweenInfo.new(0.2), {
+            Color = Color3.fromRGB(100, 100, 105)
+        }):Play()
+    end)
+    
+    -- Clear button hover
+    SearchBox.ClearButton.MouseEnter:Connect(function()
+        TweenService:Create(SearchBox.ClearButton, TweenInfo.new(0.15), {
+            ImageColor3 = Color3.fromRGB(220, 100, 100)
+        }):Play()
+    end)
+    
+    SearchBox.ClearButton.MouseLeave:Connect(function()
+        TweenService:Create(SearchBox.ClearButton, TweenInfo.new(0.15), {
+            ImageColor3 = Color3.fromRGB(150, 150, 155)
+        }):Play()
+    end)
+    
+    -- Return search system untuk akses eksternal
+    return {
+        OpenSearch = function()
+            SearchActive = true
+            SearchContainer.Visible = true
+            SearchIcon.Visible = false
+            SearchBox.SearchInput:CaptureFocus()
+            CollectTabs()
+        end,
+        
+        CloseSearch = CloseSearch,
+        
+        SetSearchText = function(text)
+            SearchBox.SearchInput.Text = text
+        end
+    }
+end
+
+-- MODIFY MakeWindow FUNCTION -------------------------------------------------
+-- Tambahkan search system ke dalam MakeWindow
+
+function NexusUI:MakeWindow(WindowConfig)
+    -- ... [kode MakeWindow yang sudah ada] ...
+    
+    -- Setelah membuat MainWindow dan TabHolder, tambahkan:
+    local SearchSystem = AddSearchSystem(MainWindow, TabHolder)
+    
+    -- Simpan search system di window function
+    TabFunction.SearchSystem = SearchSystem
+    
+    -- ... [sisa kode MakeWindow] ...
+    
+    return TabFunction
+end
+
+-- NOTIFICATION TENTANG SEARCH SYSTEM -----------------------------------------
+spawn(function()
+    task.wait(4)
+    NexusUI:MakeNotification({
+        Name = "Search System Added",
+        Content = "Click the 🔎 icon to search tabs by name",
+        Image = "rbxassetid://6031094674", -- Search icon
+        Time = 5
+    })
+end)
 
 function NexusUI:MakeWindow(WindowConfig)
 	local FirstTab = true
