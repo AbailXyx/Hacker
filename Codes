@@ -33,6 +33,12 @@ local NexusUI = {
 	SaveCfg = false
 }
 
+-- Rainbow effect variables
+NexusUI.RainbowEnabled = true
+NexusUI.RainbowSpeed = 1
+NexusUI.RainbowSaturation = 1
+NexusUI.RainbowValue = 1
+
 --Feather Icons
 local Icons = {}
 
@@ -197,14 +203,25 @@ local function AddThemeObject(Object, Type)
 		NexusUI.ThemeObjects[Type] = {}
 	end    
 	table.insert(NexusUI.ThemeObjects[Type], Object)
-	Object[ReturnProperty(Object)] = NexusUI.Themes[NexusUI.SelectedTheme][Type]
+	
+	-- Jika tipe Stroke dan rainbow enabled, skip pengaturan warna awal
+	if Type == "Stroke" and NexusUI.RainbowEnabled then
+		-- Jangan set warna, akan diatur oleh rainbow effect
+	else
+		Object[ReturnProperty(Object)] = NexusUI.Themes[NexusUI.SelectedTheme][Type]
+	end
 	return Object
 end    
 
 local function SetTheme()
 	for Name, Type in pairs(NexusUI.ThemeObjects) do
 		for _, Object in pairs(Type) do
-			Object[ReturnProperty(Object)] = NexusUI.Themes[NexusUI.SelectedTheme][Name]
+			-- Jika nama Stroke dan rainbow enabled, skip pengaturan warna
+			if Name == "Stroke" and NexusUI.RainbowEnabled then
+				-- Skip, biarkan rainbow effect yang mengatur
+			else
+				Object[ReturnProperty(Object)] = NexusUI.Themes[NexusUI.SelectedTheme][Name]
+			end
 		end    
 	end    
 end
@@ -439,7 +456,7 @@ function NexusUI:MakeNotification(NotificationConfig)
 		TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = UDim2.new(0, 0, 0, 0)}):Play()
 
 		wait(NotificationConfig.Time - 0.88)
-		TweenService:Create(NotificationFrame.Icon, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
+		TweenService:Create(NotificationFrame.Ico, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
 		TweenService:Create(NotificationFrame, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {BackgroundTransparency = 0.6}):Play()
 		wait(0.3)
 		TweenService:Create(NotificationFrame.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {Transparency = 0.9}):Play()
@@ -467,6 +484,51 @@ function NexusUI:Init()
 		end)		
 	end	
 end	
+
+-- Rainbow effect function
+local function UpdateRainbowColors()
+	if not NexusUI.RainbowEnabled then return end
+	
+	local time = tick() * NexusUI.RainbowSpeed
+	local hue = (time % 6) / 6
+	local rainbowColor = Color3.fromHSV(hue, NexusUI.RainbowSaturation, NexusUI.RainbowValue)
+	
+	-- Update all stroke objects
+	if NexusUI.ThemeObjects and NexusUI.ThemeObjects["Stroke"] then
+		for _, obj in ipairs(NexusUI.ThemeObjects["Stroke"]) do
+			if obj and obj.Parent then
+				local property = ReturnProperty(obj)
+				if property then
+					obj[property] = rainbowColor
+				end
+			end
+		end
+	end
+	
+	-- Update toggle button stroke
+	if Toggle and Toggle:FindFirstChild("UIStroke") then
+		Toggle.UIStroke.Color = rainbowColor
+	end
+end
+
+-- Start rainbow effect loop
+spawn(function()
+	while true do
+		UpdateRainbowColors()
+		RunService.RenderStepped:Wait()
+	end
+end)
+
+function NexusUI:SetRainbowEnabled(enabled)
+	NexusUI.RainbowEnabled = enabled
+	if not enabled then
+		SetTheme() -- Reset ke tema default jika rainbow dimatikan
+	end
+end
+
+function NexusUI:SetRainbowSpeed(speed)
+	NexusUI.RainbowSpeed = speed
+end
 
 function NexusUI:MakeWindow(WindowConfig)
 	local FirstTab = true
@@ -1724,19 +1786,19 @@ local RunService = game:GetService("RunService")
 
 local LocalPlayer = Players.LocalPlayer
 
---// ScreenGui
+--// ScreenGui untuk tombol toggle
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "ToggleUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
---// Button
+--// Tombol toggle di atas tengah
 local Toggle = Instance.new("TextButton")
 Toggle.Name = "Toggle"
 Toggle.Parent = ScreenGui
 Toggle.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 Toggle.BackgroundTransparency = 0.3
-Toggle.Position = UDim2.new(0, 10, 0.4, 0)
+Toggle.Position = UDim2.new(0.5, -75, 0, 10) -- Posisi di atas tengah
 Toggle.Size = UDim2.new(0, 150, 0, 40)
 Toggle.Text = "NexusUI   |   +"
 Toggle.TextColor3 = Color3.fromRGB(240, 240, 240)
@@ -1750,12 +1812,22 @@ local Corner = Instance.new("UICorner")
 Corner.CornerRadius = UDim.new(0.2, 0)
 Corner.Parent = Toggle
 
---// Stroke
+--// Stroke dengan rainbow effect
 local Stroke = Instance.new("UIStroke")
 Stroke.Parent = Toggle
-Stroke.Color = Color3.fromRGB(70, 0, 255)
+Stroke.Color = Color3.fromHSV(0, 1, 1) -- Warna awal merah
 Stroke.Thickness = 1.5
 Stroke.Transparency = 0.3
+
+--// Rainbow effect untuk stroke tombol toggle
+spawn(function()
+	while true do
+		local time = tick() * 1 -- Kecepatan rainbow
+		local hue = (time % 6) / 6
+		Stroke.Color = Color3.fromHSV(hue, 1, 1)
+		RunService.RenderStepped:Wait()
+	end
+end)
 
 --// Hover effect
 Toggle.MouseEnter:Connect(function()
@@ -1811,5 +1883,25 @@ Nexus:GetPropertyChangedSignal("Enabled"):Connect(function()
 		end
 	end
 end)
+
+--// Functions untuk kontrol rainbow effect
+function NexusUI:SetRainbowEnabled(enabled)
+	NexusUI.RainbowEnabled = enabled
+	if not enabled then
+		SetTheme() -- Reset ke tema default jika rainbow dimatikan
+	end
+end
+
+function NexusUI:SetRainbowSpeed(speed)
+	NexusUI.RainbowSpeed = speed
+end
+
+function NexusUI:SetRainbowSaturation(saturation)
+	NexusUI.RainbowSaturation = saturation
+end
+
+function NexusUI:SetRainbowValue(value)
+	NexusUI.RainbowValue = value
+end
 
 return NexusUI
