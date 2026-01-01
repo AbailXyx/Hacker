@@ -439,7 +439,7 @@ function NexusUI:MakeNotification(NotificationConfig)
 		TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = UDim2.new(0, 0, 0, 0)}):Play()
 
 		wait(NotificationConfig.Time - 0.88)
-		TweenService:Create(NotificationFrame.Icon, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
+		TweenService:Create(NotificationFrame.Ico, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
 		TweenService:Create(NotificationFrame, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {BackgroundTransparency = 0.6}):Play()
 		wait(0.3)
 		TweenService:Create(NotificationFrame.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {Transparency = 0.9}):Play()
@@ -496,28 +496,19 @@ function NexusUI:MakeWindow(WindowConfig)
 		end	
 	end
 
-	local TabHolder = AddThemeObject(SetChildren(SetProps(MakeElement("ScrollFrame", Color3.fromRGB(255, 255, 255), 4), {
-		Size = UDim2.new(1, 0, 1, -90)
-	}), {
-		MakeElement("List"),
-		MakeElement("Padding", 8, 0, 0, 8)
-	}), "Divider")
-
-	AddConnection(TabHolder.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
-		TabHolder.CanvasSize = UDim2.new(0, 0, 0, TabHolder.UIListLayout.AbsoluteContentSize.Y + 16)
-	end)
-
-	-- Search Bar
+	-- Search Bar - DIPINDAHKAN KE ATAS SEBELUM TabHolder
 	local SearchBox = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 8), {
 		Size = UDim2.new(1, -20, 0, 32),
 		Position = UDim2.new(0, 10, 0, 50),
-		BackgroundTransparency = 0.9
+		BackgroundTransparency = 0.9,
+		ZIndex = 10  -- ZIndex lebih tinggi
 	}), {
 		AddThemeObject(SetProps(MakeElement("Image", "rbxassetid://3926307971"), {
 			Size = UDim2.new(0, 20, 0, 20),
 			Position = UDim2.new(0, 8, 0, 6),
 			ImageRectOffset = Vector2.new(964, 324),
-			ImageRectSize = Vector2.new(36, 36)
+			ImageRectSize = Vector2.new(36, 36),
+			ZIndex = 11
 		}), "TextDark"),
 		AddThemeObject(Create("TextBox", {
 			Size = UDim2.new(1, -40, 1, 0),
@@ -530,10 +521,26 @@ function NexusUI:MakeWindow(WindowConfig)
 			TextSize = 14,
 			Font = Enum.Font.Gotham,
 			TextXAlignment = Enum.TextXAlignment.Left,
-			ClearTextOnFocus = false
+			ClearTextOnFocus = false,
+			ZIndex = 11
 		}), "Text"),
 		AddThemeObject(MakeElement("Stroke"), "Stroke")
 	}), "Second")
+
+	-- TabHolder dengan tinggi yang lebih kecil
+	local TabHolder = AddThemeObject(SetChildren(SetProps(MakeElement("ScrollFrame", Color3.fromRGB(255, 255, 255), 4), {
+		Size = UDim2.new(1, 0, 0, 240), -- Diperpendek
+		Position = UDim2.new(0, 0, 0, 88), -- Posisi di bawah SearchBox
+		BackgroundTransparency = 1,
+		ZIndex = 5
+	}), {
+		MakeElement("List"),
+		MakeElement("Padding", 8, 0, 0, 8)
+	}), "Divider")
+
+	AddConnection(TabHolder.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
+		TabHolder.CanvasSize = UDim2.new(0, 0, 0, TabHolder.UIListLayout.AbsoluteContentSize.Y + 16)
+	end)
 
 	-- Store tabs for search functionality
 	local TabButtons = {}
@@ -541,21 +548,23 @@ function NexusUI:MakeWindow(WindowConfig)
 	local function FilterTabs(searchText)
 		searchText = string.lower(searchText)
 		local anyVisible = false
+		local visibleCount = 0
 		
 		for tabName, tabButton in pairs(TabButtons) do
 			local tabNameLower = string.lower(tabName)
 			if searchText == "" or string.find(tabNameLower, searchText, 1, true) then
 				tabButton.Visible = true
 				anyVisible = true
+				visibleCount = visibleCount + 1
 			else
 				tabButton.Visible = false
 			end
 		end
 		
-		-- If no tabs match, show a message
-		if searchText ~= "" and not anyVisible then
-			-- Could add a "no results" message here
-		end
+		-- Adjust TabHolder size based on visible tabs
+		local newHeight = math.min(240, (visibleCount * 32) + 16)
+		TabHolder.Size = UDim2.new(1, 0, 0, newHeight)
+		TabHolder.CanvasSize = UDim2.new(0, 0, 0, (visibleCount * 32) + 16)
 	end
 
 	-- Connect search functionality
@@ -594,7 +603,8 @@ function NexusUI:MakeWindow(WindowConfig)
 
 	local WindowStuff = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 12), {
 		Size = UDim2.new(0, 160, 1, -50),
-		Position = UDim2.new(0, 0, 0, 50)
+		Position = UDim2.new(0, 0, 0, 50),
+		ClipsDescendants = true
 	}), {
 		AddThemeObject(SetProps(MakeElement("Frame"), {
 			Size = UDim2.new(1, 0, 0, 10),
@@ -786,22 +796,25 @@ function NexusUI:MakeWindow(WindowConfig)
 		TabConfig.PremiumOnly = TabConfig.PremiumOnly or false
 
 		local TabFrame = SetChildren(SetProps(MakeElement("Button"), {
-			Size = UDim2.new(1, 0, 0, 32),
-			Parent = TabHolder
+			Size = UDim2.new(1, -20, 0, 32), -- Lebar dikurangi untuk memberikan ruang scrollbar
+			Parent = TabHolder,
+			ZIndex = 6
 		}), {
 			AddThemeObject(SetProps(MakeElement("Image", TabConfig.Icon), {
 				AnchorPoint = Vector2.new(0, 0.5),
 				Size = UDim2.new(0, 18, 0, 18),
 				Position = UDim2.new(0, 10, 0.5, 0),
 				ImageTransparency = 0.4,
-				Name = "Ico"
+				Name = "Ico",
+				ZIndex = 7
 			}), "Text"),
 			AddThemeObject(SetProps(MakeElement("Label", TabConfig.Name, 14), {
 				Size = UDim2.new(1, -35, 1, 0),
 				Position = UDim2.new(0, 35, 0, 0),
 				Font = Enum.Font.GothamSemibold,
 				TextTransparency = 0.4,
-				Name = "Title"
+				Name = "Title",
+				ZIndex = 7
 			}), "Text")
 		})
 
