@@ -41,7 +41,7 @@ local Success, Response = pcall(function()
 end)
 
 if not Success then
-	warn("\nOrion Library - Failed to load Feather Icons. Error code: " .. Response .. "\n")
+	warn("\nNexusUI - Failed to load Feather Icons. Error code: " .. Response .. "\n")
 end	
 
 local function GetIcon(IconName)
@@ -52,24 +52,24 @@ local function GetIcon(IconName)
 	end
 end   
 
-local Orion = Instance.new("ScreenGui")
-Orion.Name = "Orion"
+local Nexus = Instance.new("ScreenGui")
+Nexus.Name = "Nexus"
 if syn then
-	syn.protect_gui(Orion)
-	Orion.Parent = game.CoreGui
+	syn.protect_gui(Nexus)
+	Nexus.Parent = game.CoreGui
 else
-	Orion.Parent = gethui() or game.CoreGui
+	Nexus.Parent = gethui() or game.CoreGui
 end
 
 if gethui then
 	for _, Interface in ipairs(gethui():GetChildren()) do
-		if Interface.Name == Orion.Name and Interface ~= Orion then
+		if Interface.Name == Nexus.Name and Interface ~= Nexus then
 			Interface:Destroy()
 		end
 	end
 else
 	for _, Interface in ipairs(game.CoreGui:GetChildren()) do
-		if Interface.Name == Orion.Name and Interface ~= Orion then
+		if Interface.Name == Nexus.Name and Interface ~= Nexus then
 			Interface:Destroy()
 		end
 	end
@@ -77,9 +77,9 @@ end
 
 function NexusUI:IsRunning()
 	if gethui then
-		return Orion.Parent == gethui()
+		return Nexus.Parent == gethui()
 	else
-		return Orion.Parent == game:GetService("CoreGui")
+		return Nexus.Parent == game:GetService("CoreGui")
 	end
 end
 
@@ -229,7 +229,7 @@ local function LoadCfg(Config)
 				end    
 			end)
 		else
-			warn("Orion Library Config Loader - Could not find ", a ,b)
+			warn("Nexus Library Config Loader - Could not find ", a ,b)
 		end
 	end)
 end
@@ -389,7 +389,7 @@ local NotificationHolder = SetProps(SetChildren(MakeElement("TFrame"), {
 	Position = UDim2.new(1, -25, 1, -25),
 	Size = UDim2.new(0, 300, 1, -25),
 	AnchorPoint = Vector2.new(1, 1),
-	Parent = Orion
+	Parent = Nexus
 })
 
 function NexusUI:MakeNotification(NotificationConfig)
@@ -605,7 +605,7 @@ function NexusUI:MakeWindow(WindowConfig)
 	}), "Stroke")
 
 	local MainWindow = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 12), {
-		Parent = Orion,
+		Parent = Nexus,
 		Position = UDim2.new(0.5, -307, 0.5, -172),
 		Size = UDim2.new(0, 615, 0, 344),
 		ClipsDescendants = true
@@ -684,7 +684,7 @@ function NexusUI:MakeWindow(WindowConfig)
 	local function LoadSequence()
 		MainWindow.Visible = false
 		local LoadSequenceLogo = SetProps(MakeElement("Image", WindowConfig.IntroIcon), {
-			Parent = Orion,
+			Parent = Nexus,
 			AnchorPoint = Vector2.new(0.5, 0.5),
 			Position = UDim2.new(0.5, 0, 0.4, 0),
 			Size = UDim2.new(0, 28, 0, 28),
@@ -693,7 +693,7 @@ function NexusUI:MakeWindow(WindowConfig)
 		})
 
 		local LoadSequenceText = SetProps(MakeElement("Label", WindowConfig.IntroText, 14), {
-			Parent = Orion,
+			Parent = Nexus,
 			Size = UDim2.new(1, 0, 1, 0),
 			AnchorPoint = Vector2.new(0.5, 0.5),
 			Position = UDim2.new(0.5, 19, 0.5, 0),
@@ -1710,11 +1710,11 @@ function NexusUI:MakeWindow(WindowConfig)
 end   
 
 function NexusUI:Destroy()
-	Orion:Destroy()
+	Nexus:Destroy()
 end
 
 function NexusUI:ToggleUi()
-	Orion.Enabled = not Orion.Enabled
+	Nexus.Enabled = not Nexus.Enabled
 end
 
 --// Services
@@ -1793,7 +1793,7 @@ Toggle.MouseButton1Click:Connect(function()
 	if NexusUI then
 		NexusUI:ToggleUi()
 		-- Change text based on UI state
-		if Orion.Enabled then
+		if Nexus.Enabled then
 			Toggle.Text = "NexusUI   |   -"
 		else
 			Toggle.Text = "NexusUI   |   +"
@@ -1802,9 +1802,9 @@ Toggle.MouseButton1Click:Connect(function()
 end)
 
 --// Make button follow UI state
-Orion:GetPropertyChangedSignal("Enabled"):Connect(function()
+Nexus:GetPropertyChangedSignal("Enabled"):Connect(function()
 	if Toggle then
-		if Orion.Enabled then
+		if Nexus.Enabled then
 			Toggle.Text = "NexusUI   |   -"
 		else
 			Toggle.Text = "NexusUI   |   +"
