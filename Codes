@@ -351,7 +351,8 @@ CreateElement("ScrollFrame", function(Color, Width)
 		ScrollBarImageColor3 = Color,
 		BorderSizePixel = 0,
 		ScrollBarThickness = Width,
-		CanvasSize = UDim2.new(0, 0, 0, 0)
+		CanvasSize = UDim2.new(0, 0, 0, 0),
+		ScrollBarImageTransparency = 0.5
 	})
 	return ScrollFrame
 end)
@@ -633,6 +634,7 @@ function NexusUI:MakeWindow(WindowConfig)
 		end	
 	end
 
+	-- PERBAIKAN: Buat TabContainer yang lebih tinggi untuk ScrollFrame
 	local TabContainer = SetChildren(SetProps(MakeElement("TFrame"), {
 		Size = UDim2.new(1, 0, 1, -50),
 		Name = "TabContainer",
@@ -641,17 +643,21 @@ function NexusUI:MakeWindow(WindowConfig)
 		MakeElement("List", 0, 0)
 	})
 
+	-- PERBAIKAN: ScrollFrame dengan ukuran yang benar
 	local TabScrollFrame = AddThemeObject(SetProps(MakeElement("ScrollFrame", Color3.fromRGB(255, 255, 255), 3), {
 		Size = UDim2.new(1, 0, 1, 0),
 		BackgroundTransparency = 1,
 		CanvasSize = UDim2.new(0, 0, 0, 0),
 		ScrollBarImageTransparency = 0.5,
+		ScrollBarThickness = 4,
 		Name = "TabScrollFrame"
 	}), "Divider")
 
+	-- PERBAIKAN: TabHolder dengan automatic size
 	local TabHolder = SetChildren(SetProps(MakeElement("TFrame"), {
 		Size = UDim2.new(1, 0, 0, 0),
-		AutomaticSize = Enum.AutomaticSize.Y
+		AutomaticSize = Enum.AutomaticSize.Y,
+		Name = "TabHolder"
 	}), {
 		MakeElement("List"),
 		MakeElement("Padding", 0, 4, 4, 4)
@@ -660,11 +666,12 @@ function NexusUI:MakeWindow(WindowConfig)
 	TabHolder.Parent = TabScrollFrame
 	TabScrollFrame.Parent = TabContainer
 
+	-- PERBAIKAN: Search Box dengan ukuran yang benar
 	local SearchBoxContainer
 	local SearchBox
 	if WindowConfig.SearchTabEnabled then
 		SearchBoxContainer = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 6), {
-			Size = UDim2.new(1, -16, 0, 32),
+			Size = UDim2.new(1, -16, 0, 35),
 			Position = UDim2.new(0, 8, 0, 8),
 			BackgroundTransparency = 0.7,
 			Name = "SearchContainer"
@@ -677,7 +684,7 @@ function NexusUI:MakeWindow(WindowConfig)
 				Name = "SearchIcon"
 			}), "Text"),
 			SetProps(MakeElement("TextBox", "Search tabs...", 13), {
-				Size = UDim2.new(1, -40, 1, 0),
+				Size = UDim2.new(1, -38, 1, 0),
 				Position = UDim2.new(0, 38, 0, 0),
 				BackgroundTransparency = 1,
 				TextColor3 = Color3.fromRGB(240, 240, 240),
@@ -691,24 +698,50 @@ function NexusUI:MakeWindow(WindowConfig)
 		SearchBox = SearchBoxContainer.SearchBox
 		SearchBoxContainer.Parent = TabContainer
 		
-		TabScrollFrame.Size = UDim2.new(1, 0, 1, -48)
-		TabScrollFrame.Position = UDim2.new(0, 0, 0, 48)
+		-- PERBAIKAN: Atur posisi dan ukuran ScrollFrame dengan benar
+		TabScrollFrame.Size = UDim2.new(1, 0, 1, -51) -- Kurangi tinggi untuk search box
+		TabScrollFrame.Position = UDim2.new(0, 0, 0, 51)
 	else
 		TabScrollFrame.Size = UDim2.new(1, 0, 1, 0)
 		TabScrollFrame.Position = UDim2.new(0, 0, 0, 0)
 	end
 
+	-- PERBAIKAN: Update canvas size dengan benar
 	AddConnection(TabHolder.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
-		TabHolder.Size = UDim2.new(1, 0, 0, TabHolder.UIListLayout.AbsoluteContentSize.Y)
-		TabScrollFrame.CanvasSize = UDim2.new(0, 0, 0, TabHolder.UIListLayout.AbsoluteContentSize.Y + 8)
+		local totalHeight = TabHolder.UIListLayout.AbsoluteContentSize.Y + 8
+		TabHolder.Size = UDim2.new(1, 0, 0, totalHeight)
+		TabScrollFrame.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
+		
+		-- PERBAIKAN: Jika ada banyak tab, aktifkan scrolling
+		if totalHeight > TabScrollFrame.AbsoluteSize.Y then
+			TabScrollFrame.ScrollingEnabled = true
+			TabScrollFrame.ScrollBarThickness = 4
+		else
+			TabScrollFrame.ScrollingEnabled = false
+			TabScrollFrame.ScrollBarThickness = 0
+		end
 	end)
 
+	-- PERBAIKAN: Search functionality dengan fix
 	if SearchBox then
+		local originalTabs = {}
+		
+		-- Simpan semua tab saat pertama kali dibuat
+		AddConnection(TabHolder.ChildAdded:Connect(function(child)
+			wait() -- Tunggu agar properti ter-set
+			if child:IsA("TextButton") then
+				originalTabs[child] = {
+					Name = child.Title.Text,
+					Visible = true
+				}
+			end
+		end))
+
 		AddConnection(SearchBox:GetPropertyChangedSignal("Text"), function()
 			local searchText = string.lower(SearchBox.Text)
 			
-			for _, tabBtn in ipairs(TabHolder:GetChildren()) do
-				if tabBtn:IsA("TextButton") then
+			for tabBtn, _ in pairs(originalTabs) do
+				if tabBtn and tabBtn.Parent then
 					local title = tabBtn:FindFirstChild("Title")
 					if title then
 						local tabName = string.lower(title.Text)
@@ -968,10 +1001,13 @@ function NexusUI:MakeWindow(WindowConfig)
 		TabConfig.Icon = TabConfig.Icon or ""
 		TabConfig.PremiumOnly = TabConfig.PremiumOnly or false
 
+		-- PERBAIKAN: Tab dengan properti yang benar
 		local TabFrame = SetChildren(SetProps(MakeElement("Button"), {
 			Size = UDim2.new(1, -8, 0, WindowConfig.TabHeight),
 			Parent = TabHolder,
-			BackgroundTransparency = 0
+			BackgroundTransparency = 0,
+			Name = "Tab_" .. TabConfig.Name,
+			LayoutOrder = #TabHolder:GetChildren() + 1
 		}), {
 			AddThemeObject(SetProps(MakeElement("Image", TabConfig.Icon), {
 				AnchorPoint = Vector2.new(0, 0.5),
@@ -985,15 +1021,24 @@ function NexusUI:MakeWindow(WindowConfig)
 				Position = UDim2.new(0, 30, 0, 0),
 				Font = Enum.Font.GothamSemibold,
 				TextTransparency = 0.4,
-				Name = "Title"
+				Name = "Title",
+				Text = TabConfig.Name
 			}), "Text"),
 			MakeElement("Corner", 0, 6)
 		})
 
+		-- PERBAIKAN: Tambahkan warna background untuk tab
+		TabFrame.BackgroundColor3 = NexusUI.Themes[NexusUI.SelectedTheme].Divider
+
 		AddConnection(TabFrame.MouseEnter, function()
 			if TabFrame.Title.TextTransparency == 0.4 then
 				TweenService:Create(TabFrame, TweenInfo.new(0.2), {
-					BackgroundTransparency = 0.5
+					BackgroundTransparency = 0.5,
+					BackgroundColor3 = Color3.fromRGB(
+						NexusUI.Themes[NexusUI.SelectedTheme].Divider.R * 255 + 10,
+						NexusUI.Themes[NexusUI.SelectedTheme].Divider.G * 255 + 10,
+						NexusUI.Themes[NexusUI.SelectedTheme].Divider.B * 255 + 10
+					)
 				}):Play()
 			end
 		end)
@@ -1001,7 +1046,8 @@ function NexusUI:MakeWindow(WindowConfig)
 		AddConnection(TabFrame.MouseLeave, function()
 			if TabFrame.Title.TextTransparency == 0.4 then
 				TweenService:Create(TabFrame, TweenInfo.new(0.2), {
-					BackgroundTransparency = 0
+					BackgroundTransparency = 0,
+					BackgroundColor3 = NexusUI.Themes[NexusUI.SelectedTheme].Divider
 				}):Play()
 			end
 		end)
@@ -1010,12 +1056,13 @@ function NexusUI:MakeWindow(WindowConfig)
 			TabFrame.Ico.Image = GetIcon(TabConfig.Icon)
 		end	
 
+		-- PERBAIKAN: Container untuk konten tab
 		local Container = AddThemeObject(SetChildren(SetProps(MakeElement("ScrollFrame", Color3.fromRGB(255, 255, 255), 5), {
 			Size = UDim2.new(1, -160, 1, -50),
 			Position = UDim2.new(0, 160, 0, 50),
 			Parent = MainWindow,
 			Visible = false,
-			Name = "ItemContainer"
+			Name = "ItemContainer_" .. TabConfig.Name
 		}), {
 			MakeElement("List", 0, 6),
 			MakeElement("Padding", 15, 10, 10, 15)
@@ -1032,34 +1079,66 @@ function NexusUI:MakeWindow(WindowConfig)
 			TabFrame.Title.Font = Enum.Font.GothamBold
 			Container.Visible = true
 			TweenService:Create(TabFrame, TweenInfo.new(0.2), {
-				BackgroundTransparency = 0.3
+				BackgroundTransparency = 0.3,
+				BackgroundColor3 = Color3.fromRGB(
+					NexusUI.Themes[NexusUI.SelectedTheme].Divider.R * 255 + 20,
+					NexusUI.Themes[NexusUI.SelectedTheme].Divider.G * 255 + 20,
+					NexusUI.Themes[NexusUI.SelectedTheme].Divider.B * 255 + 20
+				)
 			}):Play()
 		end    
 
+		-- PERBAIKAN: Fungsi klik tab yang benar
 		AddConnection(TabFrame.MouseButton1Click, function()
+			-- Matikan semua tab
 			for _, Tab in next, TabHolder:GetChildren() do
 				if Tab:IsA("TextButton") then
-					Tab.Title.Font = Enum.Font.GothamSemibold
-					TweenService:Create(Tab.Ico, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {ImageTransparency = 0.4}):Play()
-					TweenService:Create(Tab.Title, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextTransparency = 0.4}):Play()
-					TweenService:Create(Tab, TweenInfo.new(0.25), {
-						BackgroundTransparency = 0
-					}):Play()
+					local title = Tab:FindFirstChild("Title")
+					local ico = Tab:FindFirstChild("Ico")
+					if title and ico then
+						title.Font = Enum.Font.GothamSemibold
+						TweenService:Create(ico, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {ImageTransparency = 0.4}):Play()
+						TweenService:Create(title, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextTransparency = 0.4}):Play()
+						TweenService:Create(Tab, TweenInfo.new(0.25), {
+							BackgroundTransparency = 0,
+							BackgroundColor3 = NexusUI.Themes[NexusUI.SelectedTheme].Divider
+						}):Play()
+					end
 				end    
 			end
+			
+			-- Sembunyikan semua container
 			for _, ItemContainer in next, MainWindow:GetChildren() do
-				if ItemContainer.Name == "ItemContainer" then
+				if string.find(ItemContainer.Name, "ItemContainer_") then
 					ItemContainer.Visible = false
 				end    
 			end  
+			
+			-- Aktifkan tab yang dipilih
 			TweenService:Create(TabFrame.Ico, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {ImageTransparency = 0}):Play()
 			TweenService:Create(TabFrame.Title, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
 			TweenService:Create(TabFrame, TweenInfo.new(0.25), {
-				BackgroundTransparency = 0.3
+				BackgroundTransparency = 0.3,
+				BackgroundColor3 = Color3.fromRGB(
+					NexusUI.Themes[NexusUI.SelectedTheme].Divider.R * 255 + 20,
+					NexusUI.Themes[NexusUI.SelectedTheme].Divider.G * 255 + 20,
+					NexusUI.Themes[NexusUI.SelectedTheme].Divider.B * 255 + 20
+				)
 			}):Play()
 			TabFrame.Title.Font = Enum.Font.GothamBold
 			Container.Visible = true   
 		end)
+
+		-- PERBAIKAN: Tunggu sebentar agar layout terupdate
+		spawn(function()
+			wait(0.1)
+			-- Update TabHolder size setelah tab ditambahkan
+			local totalHeight = TabHolder.UIListLayout.AbsoluteContentSize.Y + 8
+			TabHolder.Size = UDim2.new(1, 0, 0, totalHeight)
+			TabScrollFrame.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
+		end)
+
+		-- ... (sisa kode GetElements dan ElementFunction tetap sama) ...
 
 		local function GetElements(ItemParent)
 			local ElementFunction = {}
@@ -2107,59 +2186,5 @@ spawn(function()
 		Time = 5
 	})
 end)
-
---[[
--- CONTOH PENGGUNAAN:
-local Window = NexusUI:MakeWindow({
-    Name = "Nexus UI",
-    SearchTabEnabled = true,
-    TabHeight = 28
-})
-
-local MainTab = Window:MakeTab({
-    Name = "Main",
-    Icon = "home"
-})
-
-local CombatTab = Window:MakeTab({
-    Name = "Combat",
-    Icon = "sword"
-})
-
-local VisualTab = Window:MakeTab({
-    Name = "Visuals",
-    Icon = "eye"
-})
-
-local MiscTab = Window:MakeTab({
-    Name = "Miscellaneous",
-    Icon = "settings"
-})
-
-MainTab:AddButton({
-    Name = "Test Button",
-    Callback = function()
-        print("Button clicked!")
-    end
-})
-
-MainTab:AddToggle({
-    Name = "Enable Feature",
-    Default = false,
-    Callback = function(Value)
-        print("Toggle:", Value)
-    end
-})
-
-CombatTab:AddSlider({
-    Name = "Damage Multiplier",
-    Min = 1,
-    Max = 10,
-    Default = 1,
-    Callback = function(Value)
-        print("Damage:", Value)
-    end
-})
---]]
 
 return NexusUI
