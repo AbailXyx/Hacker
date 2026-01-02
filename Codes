@@ -5,7 +5,7 @@ local LocalPlayer = game:GetService("Players").LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 local HttpService = game:GetService("HttpService")
 
-local NexusUI = {
+local OrionLib = {
 	Elements = {},
 	ThemeObjects = {},
 	Connections = {},
@@ -33,12 +33,6 @@ local NexusUI = {
 	SaveCfg = false
 }
 
--- Rainbow effect variables
-NexusUI.RainbowEnabled = true
-NexusUI.RainbowSpeed = 1
-NexusUI.RainbowSaturation = 1
-NexusUI.RainbowValue = 1
-
 --Feather Icons
 local Icons = {}
 
@@ -47,7 +41,7 @@ local Success, Response = pcall(function()
 end)
 
 if not Success then
-	warn("\nNexusUI - Failed to load Feather Icons. Error code: " .. Response .. "\n")
+	warn("\nOrion Library - Failed to load Feather Icons. Error code: " .. Response .. "\n")
 end	
 
 local function GetIcon(IconName)
@@ -58,52 +52,52 @@ local function GetIcon(IconName)
 	end
 end   
 
-local Nexus = Instance.new("ScreenGui")
-Nexus.Name = "Nexus"
+local Orion = Instance.new("ScreenGui")
+Orion.Name = "Orion"
 if syn then
-	syn.protect_gui(Nexus)
-	Nexus.Parent = game.CoreGui
+	syn.protect_gui(Orion)
+	Orion.Parent = game.CoreGui
 else
-	Nexus.Parent = gethui() or game.CoreGui
+	Orion.Parent = gethui() or game.CoreGui
 end
 
 if gethui then
 	for _, Interface in ipairs(gethui():GetChildren()) do
-		if Interface.Name == Nexus.Name and Interface ~= Nexus then
+		if Interface.Name == Orion.Name and Interface ~= Orion then
 			Interface:Destroy()
 		end
 	end
 else
 	for _, Interface in ipairs(game.CoreGui:GetChildren()) do
-		if Interface.Name == Nexus.Name and Interface ~= Nexus then
+		if Interface.Name == Orion.Name and Interface ~= Orion then
 			Interface:Destroy()
 		end
 	end
 end
 
-function NexusUI:IsRunning()
+function OrionLib:IsRunning()
 	if gethui then
-		return Nexus.Parent == gethui()
+		return Orion.Parent == gethui()
 	else
-		return Nexus.Parent == game:GetService("CoreGui")
+		return Orion.Parent == game:GetService("CoreGui")
 	end
 end
 
 local function AddConnection(Signal, Function)
-	if (not NexusUI:IsRunning()) then
+	if (not OrionLib:IsRunning()) then
 		return
 	end
 	local SignalConnect = Signal:Connect(Function)
-	table.insert(NexusUI.Connections, SignalConnect)
+	table.insert(OrionLib.Connections, SignalConnect)
 	return SignalConnect
 end
 
 task.spawn(function()
-	while (NexusUI:IsRunning()) do
+	while (OrionLib:IsRunning()) do
 		wait()
 	end
 
-	for _, Connection in next, NexusUI.Connections do
+	for _, Connection in next, OrionLib.Connections do
 		Connection:Disconnect()
 	end
 end)
@@ -150,13 +144,13 @@ local function Create(Name, Properties, Children)
 end
 
 local function CreateElement(ElementName, ElementFunction)
-	NexusUI.Elements[ElementName] = function(...)
+	OrionLib.Elements[ElementName] = function(...)
 		return ElementFunction(...)
 	end
 end
 
 local function MakeElement(ElementName, ...)
-	local NewElement = NexusUI.Elements[ElementName](...)
+	local NewElement = OrionLib.Elements[ElementName](...)
 	return NewElement
 end
 
@@ -199,29 +193,18 @@ local function ReturnProperty(Object)
 end
 
 local function AddThemeObject(Object, Type)
-	if not NexusUI.ThemeObjects[Type] then
-		NexusUI.ThemeObjects[Type] = {}
+	if not OrionLib.ThemeObjects[Type] then
+		OrionLib.ThemeObjects[Type] = {}
 	end    
-	table.insert(NexusUI.ThemeObjects[Type], Object)
-	
-	-- Jika tipe Stroke dan rainbow enabled, skip pengaturan warna awal
-	if Type == "Stroke" and NexusUI.RainbowEnabled then
-		-- Jangan set warna, akan diatur oleh rainbow effect
-	else
-		Object[ReturnProperty(Object)] = NexusUI.Themes[NexusUI.SelectedTheme][Type]
-	end
+	table.insert(OrionLib.ThemeObjects[Type], Object)
+	Object[ReturnProperty(Object)] = OrionLib.Themes[OrionLib.SelectedTheme][Type]
 	return Object
 end    
 
 local function SetTheme()
-	for Name, Type in pairs(NexusUI.ThemeObjects) do
+	for Name, Type in pairs(OrionLib.ThemeObjects) do
 		for _, Object in pairs(Type) do
-			-- Jika nama Stroke dan rainbow enabled, skip pengaturan warna
-			if Name == "Stroke" and NexusUI.RainbowEnabled then
-				-- Skip, biarkan rainbow effect yang mengatur
-			else
-				Object[ReturnProperty(Object)] = NexusUI.Themes[NexusUI.SelectedTheme][Name]
-			end
+			Object[ReturnProperty(Object)] = OrionLib.Themes[OrionLib.SelectedTheme][Name]
 		end    
 	end    
 end
@@ -237,23 +220,23 @@ end
 local function LoadCfg(Config)
 	local Data = HttpService:JSONDecode(Config)
 	table.foreach(Data, function(a,b)
-		if NexusUI.Flags[a] then
+		if OrionLib.Flags[a] then
 			spawn(function() 
-				if NexusUI.Flags[a].Type == "Colorpicker" then
-					NexusUI.Flags[a]:Set(UnpackColor(b))
+				if OrionLib.Flags[a].Type == "Colorpicker" then
+					OrionLib.Flags[a]:Set(UnpackColor(b))
 				else
-					NexusUI.Flags[a]:Set(b)
+					OrionLib.Flags[a]:Set(b)
 				end    
 			end)
 		else
-			warn("Nexus Library Config Loader - Could not find ", a ,b)
+			warn("Orion Library Config Loader - Could not find ", a ,b)
 		end
 	end)
 end
 
 local function SaveCfg(Name)
 	local Data = {}
-	for i,v in pairs(NexusUI.Flags) do
+	for i,v in pairs(OrionLib.Flags) do
 		if v.Save then
 			if v.Type == "Colorpicker" then
 				Data[i] = PackColor(v.Value)
@@ -262,7 +245,7 @@ local function SaveCfg(Name)
 			end
 		end	
 	end
-	writefile(NexusUI.Folder .. "/" .. Name .. ".txt", tostring(HttpService:JSONEncode(Data)))
+	writefile(OrionLib.Folder .. "/" .. Name .. ".txt", tostring(HttpService:JSONEncode(Data)))
 end
 
 local WhitelistedMouse = {Enum.UserInputType.MouseButton1, Enum.UserInputType.MouseButton2,Enum.UserInputType.MouseButton3,Enum.UserInputType.Touch}
@@ -395,246 +378,97 @@ CreateElement("Label", function(Text, TextSize, Transparency)
 	return Label
 end)
 
--- Notification Holder dengan fungsi yang sudah ada
 local NotificationHolder = SetProps(SetChildren(MakeElement("TFrame"), {
-    SetProps(MakeElement("List"), {
-        HorizontalAlignment = Enum.HorizontalAlignment.Right,
-        SortOrder = Enum.SortOrder.LayoutOrder,
-        VerticalAlignment = Enum.VerticalAlignment.Bottom,
-        Padding = UDim.new(0, 6)
-    })
+	SetProps(MakeElement("List"), {
+		HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		SortOrder = Enum.SortOrder.LayoutOrder,
+		VerticalAlignment = Enum.VerticalAlignment.Bottom,
+		Padding = UDim.new(0, 5)
+	})
 }), {
-    Position = UDim2.new(1, -15, 1, -15),
-    Size = UDim2.new(0, 280, 1, -40),
-    AnchorPoint = Vector2.new(1, 1),
-    Parent = Nexus,
-    BackgroundTransparency = 1,
-    Name = "NotificationHolder",
-    ClipsDescendants = true
+	Position = UDim2.new(1, -25, 1, -25),
+	Size = UDim2.new(0, 300, 1, -25),
+	AnchorPoint = Vector2.new(1, 1),
+	Parent = Orion
 })
 
--- Rainbow configuration
-local NotificationRainbowEnabled = true
-local NotificationRainbowSpeed = 1.5
+function OrionLib:MakeNotification(NotificationConfig)
+	spawn(function()
+		NotificationConfig.Name = NotificationConfig.Name or "Notification"
+		NotificationConfig.Content = NotificationConfig.Content or "Test"
+		NotificationConfig.Image = NotificationConfig.Image or "rbxassetid://4384403532"
+		NotificationConfig.Time = NotificationConfig.Time or 15
 
--- Function untuk update rainbow color
-local function UpdateRainbowColor(stroke)
-    if not stroke or not NotificationRainbowEnabled then return end
-    
-    local time = tick() * NotificationRainbowSpeed
-    local hue = (time % 6) / 6
-    stroke.Color = Color3.fromHSV(hue, 1, 1)
-end
+		local NotificationParent = SetProps(MakeElement("TFrame"), {
+			Size = UDim2.new(1, 0, 0, 0),
+			AutomaticSize = Enum.AutomaticSize.Y,
+			Parent = NotificationHolder
+		})
 
--- Function untuk membuat notification dengan rainbow
-function NexusUI:MakeNotification(NotificationConfig)
-    spawn(function()
-        -- Set default values
-        NotificationConfig.Name = NotificationConfig.Name or "Notification"
-        NotificationConfig.Content = NotificationConfig.Content or "Test"
-        NotificationConfig.Image = NotificationConfig.Image or "rbxassetid://4384403532"
-        NotificationConfig.Time = NotificationConfig.Time or 4
-        
-        -- Create compact notification parent
-        local NotificationParent = SetProps(MakeElement("TFrame"), {
-            Size = UDim2.new(1, 0, 0, 0),
-            AutomaticSize = Enum.AutomaticSize.Y,
-            Parent = NotificationHolder,
-            LayoutOrder = #NotificationHolder:GetChildren()
-        })
-        
-        -- Compact notification frame dengan rainbow stroke
-        local NotificationFrame = SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(25, 25, 25), 0, 8), {
-            Parent = NotificationParent, 
-            Size = UDim2.new(1, 0, 0, 0),
-            Position = UDim2.new(1, 15, 0, 0),
-            BackgroundTransparency = 0,
-            AutomaticSize = Enum.AutomaticSize.Y
-        }), {
-            -- Rainbow stroke
-            SetProps(MakeElement("Stroke", Color3.fromHSV(0, 1, 1), 1), { -- Start dengan warna merah
-                Name = "UIStroke"
-            }),
-            
-            -- Compact padding
-            MakeElement("Padding", 10, 10, 10, 10),
-            
-            -- Smaller icon
-            SetProps(MakeElement("Image", NotificationConfig.Image), {
-                Size = UDim2.new(0, 16, 0, 16),
-                ImageColor3 = Color3.fromRGB(240, 240, 240),
-                Name = "Icon"
-            }),
-            
-            -- Compact title
-            SetProps(MakeElement("Label", NotificationConfig.Name, 13), {
-                Size = UDim2.new(1, -26, 0, 16),
-                Position = UDim2.new(0, 26, 0, 0),
-                Font = Enum.Font.GothamBold,
-                Name = "Title",
-                TextColor3 = Color3.fromRGB(240, 240, 240),
-                TextTruncate = Enum.TextTruncate.AtEnd
-            }),
-            
-            -- Small close button
-            SetProps(MakeElement("ImageButton"), {
-                Size = UDim2.new(0, 12, 0, 12),
-                Position = UDim2.new(1, -12, 0, 10),
-                Image = "rbxassetid://7072725342",
-                ImageColor3 = Color3.fromRGB(150, 150, 150),
-                BackgroundTransparency = 1,
-                Name = "CloseBtn",
-                Visible = false
-            }),
-            
-            -- Compact content
-            SetProps(MakeElement("Label", NotificationConfig.Content, 12), {
-                Size = UDim2.new(1, 0, 0, 0),
-                Position = UDim2.new(0, 0, 0, 20),
-                Font = Enum.Font.GothamSemibold,
-                Name = "Content",
-                AutomaticSize = Enum.AutomaticSize.Y,
-                TextColor3 = Color3.fromRGB(200, 200, 200),
-                TextWrapped = true,
-                LineHeight = 1.1
-            })
-        })
-        
-        -- Rainbow update connection untuk notification ini
-        local rainbowConnection
-        if NotificationRainbowEnabled then
-            rainbowConnection = RunService.RenderStepped:Connect(function()
-                if NotificationFrame and NotificationFrame.Parent then
-                    local stroke = NotificationFrame:FindFirstChild("UIStroke")
-                    if stroke then
-                        UpdateRainbowColor(stroke)
-                    end
-                else
-                    -- Cleanup jika notification sudah dihancurkan
-                    if rainbowConnection then
-                        rainbowConnection:Disconnect()
-                    end
-                end
-            end)
-        end
-        
-        -- Wait for layout
-        task.wait(0.01)
-        
-        -- Calculate compact height
-        local contentHeight = NotificationFrame.Content.TextBounds.Y
-        local totalHeight = math.min(90, 35 + math.min(contentHeight, 50))
-        
-        if contentHeight > 50 then
-            NotificationFrame.Content.Size = UDim2.new(1, 0, 0, 50)
-            NotificationFrame.Content.Text = string.sub(NotificationConfig.Content, 1, 80) .. "..."
-            totalHeight = 85
-        end
-        
-        NotificationFrame.Size = UDim2.new(1, 0, 0, totalHeight)
-        NotificationParent.Size = UDim2.new(1, 0, 0, totalHeight)
-        
-        -- Quick slide in
-        TweenService:Create(NotificationFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
-            Position = UDim2.new(0, 0, 0, 0)
-        }):Play()
-        
-        -- Fast destroy function
-        local function DestroyNotification()
-            -- Disconnect rainbow connection
-            if rainbowConnection then
-                rainbowConnection:Disconnect()
-            end
-            
-            -- Quick fade out
-            TweenService:Create(NotificationFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                BackgroundTransparency = 0.5,
-                Position = UDim2.new(1, 10, 0, 0)
-            }):Play()
-            
-            TweenService:Create(NotificationFrame.UIStroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                Transparency = 0.8
-            }):Play()
-            
-            TweenService:Create(NotificationFrame.Title, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                TextTransparency = 0.6
-            }):Play()
-            
-            TweenService:Create(NotificationFrame.Content, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                TextTransparency = 0.7
-            }):Play()
-            
-            wait(0.25)
-            if NotificationParent.Parent then
-                NotificationParent:Destroy()
-            end
-        end
-        
-        -- Auto-destroy
-        spawn(function()
-            if NotificationConfig.Time > 0 then
-                wait(NotificationConfig.Time)
-                DestroyNotification()
-            end
-        end)
-        
-        -- Hover effects
-        NotificationFrame.MouseEnter:Connect(function()
-            NotificationFrame.CloseBtn.Visible = true
-            TweenService:Create(NotificationFrame, TweenInfo.new(0.15), {
-                BackgroundColor3 = Color3.fromRGB(28, 28, 33)
-            }):Play()
-        end)
-        
-        NotificationFrame.MouseLeave:Connect(function()
-            NotificationFrame.CloseBtn.Visible = false
-            TweenService:Create(NotificationFrame, TweenInfo.new(0.15), {
-                BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-            }):Play()
-        end)
-        
-        NotificationFrame.CloseBtn.MouseButton1Click:Connect(function()
-            DestroyNotification()
-        end)
-        
-        -- Close button hover
-        NotificationFrame.CloseBtn.MouseEnter:Connect(function()
-            TweenService:Create(NotificationFrame.CloseBtn, TweenInfo.new(0.1), {
-                ImageColor3 = Color3.fromRGB(255, 100, 100),
-                Size = UDim2.new(0, 14, 0, 14)
-            }):Play()
-        end)
-        
-        NotificationFrame.CloseBtn.MouseLeave:Connect(function()
-            TweenService:Create(NotificationFrame.CloseBtn, TweenInfo.new(0.1), {
-                ImageColor3 = Color3.fromRGB(150, 150, 150),
-                Size = UDim2.new(0, 12, 0, 12)
-            }):Play()
-        end)
-    end)
-end
+		local NotificationFrame = SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(25, 25, 25), 0, 12), {
+			Parent = NotificationParent, 
+			Size = UDim2.new(1, 0, 0, 0),
+			Position = UDim2.new(1, -55, 0, 0),
+			BackgroundTransparency = 0,
+			AutomaticSize = Enum.AutomaticSize.Y
+		}), {
+			MakeElement("Stroke", Color3.fromRGB(70, 0, 255), 1.2),
+			MakeElement("Padding", 12, 12, 12, 12),
+			SetProps(MakeElement("Image", NotificationConfig.Image), {
+				Size = UDim2.new(0, 20, 0, 20),
+				ImageColor3 = Color3.fromRGB(240, 240, 240),
+				Name = "Icon"
+			}),
+			SetProps(MakeElement("Label", NotificationConfig.Name, 15), {
+				Size = UDim2.new(1, -30, 0, 20),
+				Position = UDim2.new(0, 30, 0, 0),
+				Font = Enum.Font.GothamBold,
+				Name = "Title"
+			}),
+			SetProps(MakeElement("Label", NotificationConfig.Content, 14), {
+				Size = UDim2.new(1, 0, 0, 0),
+				Position = UDim2.new(0, 0, 0, 25),
+				Font = Enum.Font.GothamSemibold,
+				Name = "Content",
+				AutomaticSize = Enum.AutomaticSize.Y,
+				TextColor3 = Color3.fromRGB(200, 200, 200),
+				TextWrapped = true
+			})
+		})
 
--- Control functions untuk rainbow
-function NexusUI:SetNotificationRainbow(enabled)
-    NotificationRainbowEnabled = enabled
-end
+		TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = UDim2.new(0, 0, 0, 0)}):Play()
 
-function NexusUI:SetNotificationRainbowSpeed(speed)
-    NotificationRainbowSpeed = speed
-end
+		wait(NotificationConfig.Time - 0.88)
+		TweenService:Create(NotificationFrame.Icon, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
+		TweenService:Create(NotificationFrame, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {BackgroundTransparency = 0.6}):Play()
+		wait(0.3)
+		TweenService:Create(NotificationFrame.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {Transparency = 0.9}):Play()
+		TweenService:Create(NotificationFrame.Title, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {TextTransparency = 0.4}):Play()
+		TweenService:Create(NotificationFrame.Content, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {TextTransparency = 0.5}):Play()
+		wait(0.05)
 
--- Test notification
-spawn(function()
-    task.wait(1)
-    NexusUI:MakeNotification({
-        Name = "Rainbow Mode",
-        Content = "Border berubah warna rainbow!",
-        Image = "rbxassetid://6035067836",
-        Time = 5
-    })
-end)
+		NotificationFrame:TweenPosition(UDim2.new(1, 20, 0, 0),'In','Quint',0.8,true)
+		wait(1.35)
+		NotificationFrame:Destroy()
+	end)
+end    
 
-function NexusUI:MakeWindow(WindowConfig)
+function OrionLib:Init()
+	if OrionLib.SaveCfg then	
+		pcall(function()
+			if isfile(OrionLib.Folder .. "/" .. game.GameId .. ".txt") then
+				LoadCfg(readfile(OrionLib.Folder .. "/" .. game.GameId .. ".txt"))
+				OrionLib:MakeNotification({
+					Name = "Configuration",
+					Content = "Auto-loaded configuration for the game " .. game.GameId .. ".",
+					Time = 5
+				})
+			end
+		end)		
+	end	
+end	
+
+function OrionLib:MakeWindow(WindowConfig)
 	local FirstTab = true
 	local Minimized = false
 	local Loaded = false
@@ -653,8 +487,8 @@ function NexusUI:MakeWindow(WindowConfig)
 	WindowConfig.ShowIcon = WindowConfig.ShowIcon or false
 	WindowConfig.Icon = WindowConfig.Icon or "rbxassetid://8834748103"
 	WindowConfig.IntroIcon = WindowConfig.IntroIcon or "rbxassetid://8834748103"
-	NexusUI.Folder = WindowConfig.ConfigFolder
-	NexusUI.SaveCfg = WindowConfig.SaveConfig
+	OrionLib.Folder = WindowConfig.ConfigFolder
+	OrionLib.SaveCfg = WindowConfig.SaveConfig
 
 	if WindowConfig.SaveConfig then
 		if not isfolder(WindowConfig.ConfigFolder) then
@@ -663,14 +497,109 @@ function NexusUI:MakeWindow(WindowConfig)
 	end
 
 	local TabHolder = AddThemeObject(SetChildren(SetProps(MakeElement("ScrollFrame", Color3.fromRGB(255, 255, 255), 4), {
-		Size = UDim2.new(1, 0, 1, -50)
+		Size = UDim2.new(1, 0, 1, -90)
 	}), {
 		MakeElement("List"),
 		MakeElement("Padding", 8, 0, 0, 8)
 	}), "Divider")
 
+	local TabButtons = {}
+
+	-- Search Bar
+	local SearchBox = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 8), {
+		Size = UDim2.new(1, -20, 0, 32),
+		Position = UDim2.new(0, 10, 0, 50),
+		BackgroundTransparency = 0.9
+	}), {
+		AddThemeObject(SetProps(MakeElement("Image", "rbxassetid://3926307971"), {
+			Size = UDim2.new(0, 20, 0, 20),
+			Position = UDim2.new(0, 8, 0, 6),
+			ImageRectOffset = Vector2.new(964, 324),
+			ImageRectSize = Vector2.new(36, 36)
+		}), "TextDark"),
+		AddThemeObject(Create("TextBox", {
+			Size = UDim2.new(1, -40, 1, 0),
+			Position = UDim2.new(0, 35, 0, 0),
+			BackgroundTransparency = 1,
+			Text = "",
+			PlaceholderText = "Search tabs...",
+			PlaceholderColor3 = Color3.fromRGB(150, 150, 150),
+			TextColor3 = Color3.fromRGB(240, 240, 240),
+			TextSize = 14,
+			Font = Enum.Font.Gotham,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			ClearTextOnFocus = false
+		}), "Text"),
+		AddThemeObject(MakeElement("Stroke"), "Stroke")
+	}), "Second")
+
+	-- Add clear button
+	local ClearButton = AddThemeObject(SetProps(MakeElement("ImageButton", "rbxassetid://3926305904"), {
+		Size = UDim2.new(0, 20, 0, 20),
+		Position = UDim2.new(1, -25, 0, 6),
+		BackgroundTransparency = 1,
+		ImageRectOffset = Vector2.new(284, 4),
+		ImageRectSize = Vector2.new(24, 24),
+		Visible = false
+	}), "TextDark")
+	ClearButton.Parent = SearchBox
+
+	local function FilterTabs(searchText)
+		searchText = string.lower(searchText)
+		local anyVisible = false
+		
+		for tabName, tabButton in pairs(TabButtons) do
+			local tabNameLower = string.lower(tabName)
+			if searchText == "" or string.find(tabNameLower, searchText, 1, true) then
+				tabButton.Visible = true
+				anyVisible = true
+			else
+				tabButton.Visible = false
+			end
+		end
+		
+		-- Hide/show clear button
+		ClearButton.Visible = searchText ~= ""
+		
+		-- Update canvas size
+		wait(0.01)
+		local visibleTabs = 0
+		for _, tabButton in pairs(TabButtons) do
+			if tabButton.Visible then
+				visibleTabs = visibleTabs + 1
+			end
+		end
+		
+		if TabHolder.UIListLayout then
+			local totalHeight = (visibleTabs * 32) + ((visibleTabs - 1) * TabHolder.UIListLayout.Padding.Offset)
+			TabHolder.CanvasSize = UDim2.new(0, 0, 0, totalHeight + 16)
+		end
+	end
+
 	AddConnection(TabHolder.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
-		TabHolder.CanvasSize = UDim2.new(0, 0, 0, TabHolder.UIListLayout.AbsoluteContentSize.Y + 16)
+		local visibleCount = 0
+		for _, child in ipairs(TabHolder:GetChildren()) do
+			if child:IsA("TextButton") and child.Visible then
+				visibleCount = visibleCount + 1
+			end
+		end
+		
+		if visibleCount > 0 then
+			TabHolder.CanvasSize = UDim2.new(0, 0, 0, TabHolder.UIListLayout.AbsoluteContentSize.Y + 16)
+		else
+			TabHolder.CanvasSize = UDim2.new(0, 0, 0, 50)
+		end
+	end)
+
+	-- Connect search functionality
+	local SearchTextBox = SearchBox:FindFirstChildOfClass("TextBox")
+	AddConnection(SearchTextBox:GetPropertyChangedSignal("Text"), function()
+		FilterTabs(SearchTextBox.Text)
+	end)
+
+	AddConnection(ClearButton.MouseButton1Click, function()
+		SearchTextBox.Text = ""
+		FilterTabs("")
 	end)
 
 	local CloseBtn = SetChildren(SetProps(MakeElement("Button"), {
@@ -715,6 +644,7 @@ function NexusUI:MakeWindow(WindowConfig)
 			Size = UDim2.new(0, 1, 1, 0),
 			Position = UDim2.new(1, -1, 0, 0)
 		}), "Stroke"), 
+		SearchBox,
 		TabHolder,
 		SetChildren(SetProps(MakeElement("TFrame"), {
 			Size = UDim2.new(1, 0, 0, 50),
@@ -771,7 +701,7 @@ function NexusUI:MakeWindow(WindowConfig)
 	}), "Stroke")
 
 	local MainWindow = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 12), {
-		Parent = Nexus,
+		Parent = Orion,
 		Position = UDim2.new(0.5, -307, 0.5, -172),
 		Size = UDim2.new(0, 615, 0, 344),
 		ClipsDescendants = true
@@ -813,7 +743,7 @@ function NexusUI:MakeWindow(WindowConfig)
 	AddConnection(CloseBtn.MouseButton1Up, function()
 		MainWindow.Visible = false
 		UIHidden = true
-		NexusUI:MakeNotification({
+		OrionLib:MakeNotification({
 			Name = "Interface Hidden",
 			Content = "Tap RightShift to reopen the interface",
 			Time = 5
@@ -850,7 +780,7 @@ function NexusUI:MakeWindow(WindowConfig)
 	local function LoadSequence()
 		MainWindow.Visible = false
 		local LoadSequenceLogo = SetProps(MakeElement("Image", WindowConfig.IntroIcon), {
-			Parent = Nexus,
+			Parent = Orion,
 			AnchorPoint = Vector2.new(0.5, 0.5),
 			Position = UDim2.new(0.5, 0, 0.4, 0),
 			Size = UDim2.new(0, 28, 0, 28),
@@ -859,7 +789,7 @@ function NexusUI:MakeWindow(WindowConfig)
 		})
 
 		local LoadSequenceText = SetProps(MakeElement("Label", WindowConfig.IntroText, 14), {
-			Parent = Nexus,
+			Parent = Orion,
 			Size = UDim2.new(1, 0, 1, 0),
 			AnchorPoint = Vector2.new(0.5, 0.5),
 			Position = UDim2.new(0.5, 19, 0.5, 0),
@@ -891,10 +821,14 @@ function NexusUI:MakeWindow(WindowConfig)
 		TabConfig.Icon = TabConfig.Icon or ""
 		TabConfig.PremiumOnly = TabConfig.PremiumOnly or false
 
-		local TabFrame = SetChildren(SetProps(MakeElement("Button"), {
+		local TabFrame = SetChildren(SetProps(Create("TextButton", {
 			Size = UDim2.new(1, 0, 0, 32),
-			Parent = TabHolder
-		}), {
+			Parent = TabHolder,
+			BackgroundTransparency = 1,
+			Text = "",
+			AutoButtonColor = false,
+			BorderSizePixel = 0
+		}), {}), {
 			AddThemeObject(SetProps(MakeElement("Image", TabConfig.Icon), {
 				AnchorPoint = Vector2.new(0, 0.5),
 				Size = UDim2.new(0, 18, 0, 18),
@@ -910,6 +844,9 @@ function NexusUI:MakeWindow(WindowConfig)
 				Name = "Title"
 			}), "Text")
 		})
+
+		-- Store tab for search functionality
+		TabButtons[TabConfig.Name] = TabFrame
 
 		if GetIcon(TabConfig.Icon) ~= nil then
 			TabFrame.Ico.Image = GetIcon(TabConfig.Icon)
@@ -1049,22 +986,22 @@ function NexusUI:MakeWindow(WindowConfig)
 				}), "Second")
 
 				AddConnection(Click.MouseEnter, function()
-					TweenService:Create(ButtonFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(NexusUI.Themes[NexusUI.SelectedTheme].Second.R * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.G * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.B * 255 + 8)}):Play()
+					TweenService:Create(ButtonFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R * 255 + 8, OrionLib.Themes[OrionLib.SelectedTheme].Second.G * 255 + 8, OrionLib.Themes[OrionLib.SelectedTheme].Second.B * 255 + 8)}):Play()
 				end)
 
 				AddConnection(Click.MouseLeave, function()
-					TweenService:Create(ButtonFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = NexusUI.Themes[NexusUI.SelectedTheme].Second}):Play()
+					TweenService:Create(ButtonFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = OrionLib.Themes[OrionLib.SelectedTheme].Second}):Play()
 				end)
 
 				AddConnection(Click.MouseButton1Up, function()
-					TweenService:Create(ButtonFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(NexusUI.Themes[NexusUI.SelectedTheme].Second.R * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.G * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.B * 255 + 8)}):Play()
+					TweenService:Create(ButtonFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R * 255 + 8, OrionLib.Themes[OrionLib.SelectedTheme].Second.G * 255 + 8, OrionLib.Themes[OrionLib.SelectedTheme].Second.B * 255 + 8)}):Play()
 					spawn(function()
 						ButtonConfig.Callback()
 					end)
 				end)
 
 				AddConnection(Click.MouseButton1Down, function()
-					TweenService:Create(ButtonFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(NexusUI.Themes[NexusUI.SelectedTheme].Second.R * 255 + 12, NexusUI.Themes[NexusUI.SelectedTheme].Second.G * 255 + 12, NexusUI.Themes[NexusUI.SelectedTheme].Second.B * 255 + 12)}):Play()
+					TweenService:Create(ButtonFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R * 255 + 12, OrionLib.Themes[OrionLib.SelectedTheme].Second.G * 255 + 12, OrionLib.Themes[OrionLib.SelectedTheme].Second.B * 255 + 12)}):Play()
 				end)
 
 				function Button:Set(ButtonText)
@@ -1124,8 +1061,8 @@ function NexusUI:MakeWindow(WindowConfig)
 
 				function Toggle:Set(Value)
 					Toggle.Value = Value
-					TweenService:Create(ToggleBox, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Toggle.Value and ToggleConfig.Color or NexusUI.Themes.Default.Divider}):Play()
-					TweenService:Create(ToggleBox.Stroke, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Color = Toggle.Value and ToggleConfig.Color or NexusUI.Themes.Default.Stroke}):Play()
+					TweenService:Create(ToggleBox, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Toggle.Value and ToggleConfig.Color or OrionLib.Themes.Default.Divider}):Play()
+					TweenService:Create(ToggleBox.Stroke, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Color = Toggle.Value and ToggleConfig.Color or OrionLib.Themes.Default.Stroke}):Play()
 					TweenService:Create(ToggleBox.Ico, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {ImageTransparency = Toggle.Value and 0 or 1, Size = Toggle.Value and UDim2.new(0, 20, 0, 20) or UDim2.new(0, 8, 0, 8)}):Play()
 					ToggleConfig.Callback(Toggle.Value)
 				end    
@@ -1133,25 +1070,25 @@ function NexusUI:MakeWindow(WindowConfig)
 				Toggle:Set(Toggle.Value)
 
 				AddConnection(Click.MouseEnter, function()
-					TweenService:Create(ToggleFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(NexusUI.Themes[NexusUI.SelectedTheme].Second.R * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.G * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.B * 255 + 8)}):Play()
+					TweenService:Create(ToggleFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R * 255 + 8, OrionLib.Themes[OrionLib.SelectedTheme].Second.G * 255 + 8, OrionLib.Themes[OrionLib.SelectedTheme].Second.B * 255 + 8)}):Play()
 				end)
 
 				AddConnection(Click.MouseLeave, function()
-					TweenService:Create(ToggleFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = NexusUI.Themes[NexusUI.SelectedTheme].Second}):Play()
+					TweenService:Create(ToggleFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = OrionLib.Themes[OrionLib.SelectedTheme].Second}):Play()
 				end)
 
 				AddConnection(Click.MouseButton1Up, function()
-					TweenService:Create(ToggleFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(NexusUI.Themes[NexusUI.SelectedTheme].Second.R * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.G * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.B * 255 + 8)}):Play()
+					TweenService:Create(ToggleFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R * 255 + 8, OrionLib.Themes[OrionLib.SelectedTheme].Second.G * 255 + 8, OrionLib.Themes[OrionLib.SelectedTheme].Second.B * 255 + 8)}):Play()
 					SaveCfg(game.GameId)
 					Toggle:Set(not Toggle.Value)
 				end)
 
 				AddConnection(Click.MouseButton1Down, function()
-					TweenService:Create(ToggleFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(NexusUI.Themes[NexusUI.SelectedTheme].Second.R * 255 + 12, NexusUI.Themes[NexusUI.SelectedTheme].Second.G * 255 + 12, NexusUI.Themes[NexusUI.SelectedTheme].Second.B * 255 + 12)}):Play()
+					TweenService:Create(ToggleFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R * 255 + 12, OrionLib.Themes[OrionLib.SelectedTheme].Second.G * 255 + 12, OrionLib.Themes[OrionLib.SelectedTheme].Second.B * 255 + 12)}):Play()
 				end)
 
 				if ToggleConfig.Flag then
-					NexusUI.Flags[ToggleConfig.Flag] = Toggle
+					OrionLib.Flags[ToggleConfig.Flag] = Toggle
 				end	
 				return Toggle
 			end  
@@ -1246,7 +1183,7 @@ function NexusUI:MakeWindow(WindowConfig)
 
 				Slider:Set(Slider.Value)
 				if SliderConfig.Flag then				
-					NexusUI.Flags[SliderConfig.Flag] = Slider
+					OrionLib.Flags[SliderConfig.Flag] = Slider
 				end
 				return Slider
 			end  
@@ -1401,7 +1338,7 @@ function NexusUI:MakeWindow(WindowConfig)
 				Dropdown:Refresh(Dropdown.Options, false)
 				Dropdown:Set(Dropdown.Value)
 				if DropdownConfig.Flag then				
-					NexusUI.Flags[DropdownConfig.Flag] = Dropdown
+					OrionLib.Flags[DropdownConfig.Flag] = Dropdown
 				end
 				return Dropdown
 			end
@@ -1498,19 +1435,19 @@ function NexusUI:MakeWindow(WindowConfig)
 				end)
 
 				AddConnection(Click.MouseEnter, function()
-					TweenService:Create(BindFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(NexusUI.Themes[NexusUI.SelectedTheme].Second.R * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.G * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.B * 255 + 8)}):Play()
+					TweenService:Create(BindFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R * 255 + 8, OrionLib.Themes[OrionLib.SelectedTheme].Second.G * 255 + 8, OrionLib.Themes[OrionLib.SelectedTheme].Second.B * 255 + 8)}):Play()
 				end)
 
 				AddConnection(Click.MouseLeave, function()
-					TweenService:Create(BindFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = NexusUI.Themes[NexusUI.SelectedTheme].Second}):Play()
+					TweenService:Create(BindFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = OrionLib.Themes[OrionLib.SelectedTheme].Second}):Play()
 				end)
 
 				AddConnection(Click.MouseButton1Up, function()
-					TweenService:Create(BindFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(NexusUI.Themes[NexusUI.SelectedTheme].Second.R * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.G * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.B * 255 + 8)}):Play()
+					TweenService:Create(BindFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R * 255 + 8, OrionLib.Themes[OrionLib.SelectedTheme].Second.G * 255 + 8, OrionLib.Themes[OrionLib.SelectedTheme].Second.B * 255 + 8)}):Play()
 				end)
 
 				AddConnection(Click.MouseButton1Down, function()
-					TweenService:Create(BindFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(NexusUI.Themes[NexusUI.SelectedTheme].Second.R * 255 + 12, NexusUI.Themes[NexusUI.SelectedTheme].Second.G * 255 + 12, NexusUI.Themes[NexusUI.SelectedTheme].Second.B * 255 + 12)}):Play()
+					TweenService:Create(BindFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R * 255 + 12, OrionLib.Themes[OrionLib.SelectedTheme].Second.G * 255 + 12, OrionLib.Themes[OrionLib.SelectedTheme].Second.B * 255 + 12)}):Play()
 				end)
 
 				function Bind:Set(Key)
@@ -1522,7 +1459,7 @@ function NexusUI:MakeWindow(WindowConfig)
 
 				Bind:Set(BindConfig.Default)
 				if BindConfig.Flag then				
-					NexusUI.Flags[BindConfig.Flag] = Bind
+					OrionLib.Flags[BindConfig.Flag] = Bind
 				end
 				return Bind
 			end  
@@ -1588,20 +1525,20 @@ function NexusUI:MakeWindow(WindowConfig)
 				TextboxActual.Text = TextboxConfig.Default
 
 				AddConnection(Click.MouseEnter, function()
-					TweenService:Create(TextboxFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(NexusUI.Themes[NexusUI.SelectedTheme].Second.R * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.G * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.B * 255 + 8)}):Play()
+					TweenService:Create(TextboxFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R * 255 + 8, OrionLib.Themes[OrionLib.SelectedTheme].Second.G * 255 + 8, OrionLib.Themes[OrionLib.SelectedTheme].Second.B * 255 + 8)}):Play()
 				end)
 
 				AddConnection(Click.MouseLeave, function()
-					TweenService:Create(TextboxFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = NexusUI.Themes[NexusUI.SelectedTheme].Second}):Play()
+					TweenService:Create(TextboxFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = OrionLib.Themes[OrionLib.SelectedTheme].Second}):Play()
 				end)
 
 				AddConnection(Click.MouseButton1Up, function()
-					TweenService:Create(TextboxFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(NexusUI.Themes[NexusUI.SelectedTheme].Second.R * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.G * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.B * 255 + 8)}):Play()
+					TweenService:Create(TextboxFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R * 255 + 8, OrionLib.Themes[OrionLib.SelectedTheme].Second.G * 255 + 8, OrionLib.Themes[OrionLib.SelectedTheme].Second.B * 255 + 8)}):Play()
 					TextboxActual:CaptureFocus()
 				end)
 
 				AddConnection(Click.MouseButton1Down, function()
-					TweenService:Create(TextboxFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(NexusUI.Themes[NexusUI.SelectedTheme].Second.R * 255 + 12, NexusUI.Themes[NexusUI.SelectedTheme].Second.G * 255 + 12, NexusUI.Themes[NexusUI.SelectedTheme].Second.B * 255 + 12)}):Play()
+					TweenService:Create(TextboxFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R * 255 + 12, OrionLib.Themes[OrionLib.SelectedTheme].Second.G * 255 + 12, OrionLib.Themes[OrionLib.SelectedTheme].Second.B * 255 + 12)}):Play()
 				end)
 			end 
 			function ElementFunction:AddColorpicker(ColorpickerConfig)
@@ -1785,7 +1722,7 @@ function NexusUI:MakeWindow(WindowConfig)
 
 				Colorpicker:Set(Colorpicker.Value)
 				if ColorpickerConfig.Flag then				
-					NexusUI.Flags[ColorpickerConfig.Flag] = Colorpicker
+					OrionLib.Flags[ColorpickerConfig.Flag] = Colorpicker
 				end
 				return Colorpicker
 			end  
@@ -1875,12 +1812,12 @@ function NexusUI:MakeWindow(WindowConfig)
 	return TabFunction
 end   
 
-function NexusUI:Destroy()
-	Nexus:Destroy()
+function OrionLib:Destroy()
+	Orion:Destroy()
 end
 
-function NexusUI:ToggleUi()
-	Nexus.Enabled = not Nexus.Enabled
+function OrionLib:ToggleUi()
+	Orion.Enabled = not Orion.Enabled
 end
 
 --// Services
@@ -1890,19 +1827,19 @@ local RunService = game:GetService("RunService")
 
 local LocalPlayer = Players.LocalPlayer
 
---// ScreenGui untuk tombol toggle
+--// ScreenGui
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "ToggleUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
---// Tombol toggle di atas tengah
+--// Button
 local Toggle = Instance.new("TextButton")
 Toggle.Name = "Toggle"
 Toggle.Parent = ScreenGui
 Toggle.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 Toggle.BackgroundTransparency = 0.3
-Toggle.Position = UDim2.new(0.5, -75, 0, 10) -- Posisi di atas tengah
+Toggle.Position = UDim2.new(0, 10, 0.4, 0)
 Toggle.Size = UDim2.new(0, 150, 0, 40)
 Toggle.Text = "NexusUI   |   +"
 Toggle.TextColor3 = Color3.fromRGB(240, 240, 240)
@@ -1916,22 +1853,12 @@ local Corner = Instance.new("UICorner")
 Corner.CornerRadius = UDim.new(0.2, 0)
 Corner.Parent = Toggle
 
---// Stroke dengan rainbow effect
+--// Stroke
 local Stroke = Instance.new("UIStroke")
 Stroke.Parent = Toggle
-Stroke.Color = Color3.fromHSV(0, 1, 1) -- Warna awal merah
+Stroke.Color = Color3.fromRGB(70, 0, 255)
 Stroke.Thickness = 1.5
 Stroke.Transparency = 0.3
-
---// Rainbow effect untuk stroke tombol toggle
-spawn(function()
-	while true do
-		local time = tick() * 1 -- Kecepatan rainbow
-		local hue = (time % 6) / 6
-		Stroke.Color = Color3.fromHSV(hue, 1, 1)
-		RunService.RenderStepped:Wait()
-	end
-end)
 
 --// Hover effect
 Toggle.MouseEnter:Connect(function()
@@ -1965,11 +1892,11 @@ Toggle.MouseButton1Click:Connect(function()
 		Size = UDim2.new(0, 150, 0, 40)
 	}):Play()
 
-	-- Toggle NexusUI UI
-	if NexusUI then
-		NexusUI:ToggleUi()
+	-- Toggle OrionLib UI
+	if OrionLib then
+		OrionLib:ToggleUi()
 		-- Change text based on UI state
-		if Nexus.Enabled then
+		if Orion.Enabled then
 			Toggle.Text = "NexusUI   |   -"
 		else
 			Toggle.Text = "NexusUI   |   +"
@@ -1978,9 +1905,9 @@ Toggle.MouseButton1Click:Connect(function()
 end)
 
 --// Make button follow UI state
-Nexus:GetPropertyChangedSignal("Enabled"):Connect(function()
+Orion:GetPropertyChangedSignal("Enabled"):Connect(function()
 	if Toggle then
-		if Nexus.Enabled then
+		if Orion.Enabled then
 			Toggle.Text = "NexusUI   |   -"
 		else
 			Toggle.Text = "NexusUI   |   +"
@@ -1988,34 +1915,4 @@ Nexus:GetPropertyChangedSignal("Enabled"):Connect(function()
 	end
 end)
 
---// Functions untuk kontrol rainbow effect
-function NexusUI:SetRainbowEnabled(enabled)
-	NexusUI.RainbowEnabled = enabled
-	if not enabled then
-		SetTheme() -- Reset ke tema default jika rainbow dimatikan
-	end
-end
-
-function NexusUI:SetRainbowSpeed(speed)
-	NexusUI.RainbowSpeed = speed
-end
-
-function NexusUI:SetRainbowSaturation(saturation)
-	NexusUI.RainbowSaturation = saturation
-end
-
-function NexusUI:SetRainbowValue(value)
-	NexusUI.RainbowValue = value
-end
-
--- Test notification (opsional, bisa dihapus)
-spawn(function()
-	task.wait(3)
-	NexusUI:MakeNotification({
-		Name = "Nexus UI",
-		Content = "UI loaded successfully! Click the button at the top center to toggle.",
-		Time = 5
-	})
-end)
-
-return NexusUI 
+return OrionLib
