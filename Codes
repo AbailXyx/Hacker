@@ -1823,99 +1823,76 @@ function NexusUI:ToggleUi()
 	Nexus.Enabled = not Nexus.Enabled
 end
 
---// Services
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
 
-local LocalPlayer = Players.LocalPlayer
+-- 1. CREATE THE UI STRUCTURE
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "NexusUIToggle"
+screenGui.Parent = player:WaitForChild("PlayerGui")
 
---// ScreenGui
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "ToggleUI"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+-- 2. CREATE THE IMAGE BUTTON (The main clickable square)
+local toggleButton = Instance.new("ImageButton")
+toggleButton.Name = "ToggleButton"
+toggleButton.Parent = screenGui
+toggleButton.BackgroundColor3 = Color3.fromRGB(25, 25, 30) -- Dark background
+toggleButton.Position = UDim2.new(0.5, 0, 1, -70)
+-- atau untuk jarak yang lebih sedikit dari bawah:
+-- toggleButton.Position = UDim2.new(0.5, 0, 1, -60)
+toggleButton.Size = UDim2.new(0, 50, 0, 50) -- Square size
+toggleButton.AutoButtonColor = false -- Gives you full control over click effects
 
---// Button
-local Toggle = Instance.new("TextButton")
-Toggle.Name = "Toggle"
-Toggle.Parent = ScreenGui
-Toggle.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-Toggle.BackgroundTransparency = 0.3
-Toggle.Position = UDim2.new(0, 10, 0.4, 0)
-Toggle.Size = UDim2.new(0, 150, 0, 40)
-Toggle.Text = "NexusUI   |   +"
-Toggle.TextColor3 = Color3.fromRGB(240, 240, 240)
-Toggle.TextSize = 16
-Toggle.Font = Enum.Font.GothamBold
-Toggle.Draggable = true
-Toggle.AutoButtonColor = false
+-- >>> REPLACE THIS WITH YOUR COPIED ID FROM THE TOOLBOX <<<
+toggleButton.Image = "http://www.roblox.com/asset/?id=82528573041751"
 
---// Rounded Corner
-local Corner = Instance.new("UICorner")
-Corner.CornerRadius = UDim.new(0.2, 0)
-Corner.Parent = Toggle
+-- 3. ADD THE UI CORNER (Rounded edges)
+local uiCorner = Instance.new("UICorner")
+uiCorner.CornerRadius = UDim.new(0.2, 0) -- Adjust for more/less rounding
+uiCorner.Parent = toggleButton
 
---// Stroke
-local Stroke = Instance.new("UIStroke")
-Stroke.Parent = Toggle
-Stroke.Color = Color3.fromRGB(70, 0, 255)
-Stroke.Thickness = 1.5
-Stroke.Transparency = 0.3
+-- 4. ADD THE UI STROKE (Colored outline)
+local uiStroke = Instance.new("UIStroke")
+uiStroke.Parent = toggleButton
+uiStroke.Color = Color3.fromRGB(100, 70, 255) -- Purple color
+uiStroke.Thickness = 2
+uiStroke.Transparency = 0.3
 
---// Hover effect
-Toggle.MouseEnter:Connect(function()
-	TweenService:Create(Toggle, TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-		BackgroundColor3 = Color3.fromRGB(30, 30, 35),
-		BackgroundTransparency = 0.2
-	}):Play()
-	TweenService:Create(Stroke, TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-		Transparency = 0
-	}):Play()
+-- 5. ADD FUNCTIONALITY (Toggle UI and Rotate)
+local isUIOpen = true
+
+toggleButton.MouseButton1Click:Connect(function()
+    if NexusUI and NexusUI.ToggleUi then
+        NexusUI:ToggleUi()
+        isUIOpen = not isUIOpen
+        
+        -- Simple rotation animation
+        local targetRotation = isUIOpen and 0 or 180
+        TweenService:Create(toggleButton, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+            Rotation = targetRotation
+        }):Play()
+    end
 end)
 
-Toggle.MouseLeave:Connect(function()
-	TweenService:Create(Toggle, TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-		BackgroundColor3 = Color3.fromRGB(20, 20, 20),
-		BackgroundTransparency = 0.3
-	}):Play()
-	TweenService:Create(Stroke, TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-		Transparency = 0.3
-	}):Play()
+-- 6. ADD HOVER EFFECTS (Optional but nice)
+toggleButton.MouseEnter:Connect(function()
+    TweenService:Create(toggleButton, TweenInfo.new(0.2), {
+        BackgroundColor3 = Color3.fromRGB(35, 35, 40),
+        Size = UDim2.new(0, 52, 0, 52)
+    }):Play()
+    TweenService:Create(uiStroke, TweenInfo.new(0.2), {
+        Transparency = 0
+    }):Play()
 end)
 
---// Click animation + toggle UI
-Toggle.MouseButton1Click:Connect(function()
-	-- Animasi klik
-	TweenService:Create(Toggle, TweenInfo.new(0.1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-		Size = UDim2.new(0, 145, 0, 38)
-	}):Play()
-	task.wait(0.1)
-	TweenService:Create(Toggle, TweenInfo.new(0.1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-		Size = UDim2.new(0, 150, 0, 40)
-	}):Play()
-
-	-- Toggle NexusUI UI
-	if NexusUI then
-		NexusUI:ToggleUi()
-		-- Change text based on UI state
-		if Nexus.Enabled then
-			Toggle.Text = "NexusUI   |   -"
-		else
-			Toggle.Text = "NexusUI   |   +"
-		end
-	end
-end)
-
---// Make button follow UI state
-Nexus:GetPropertyChangedSignal("Enabled"):Connect(function()
-	if Toggle then
-		if Nexus.Enabled then
-			Toggle.Text = "NexusUI   |   -"
-		else
-			Toggle.Text = "NexusUI   |   +"
-		end
-	end
+toggleButton.MouseLeave:Connect(function()
+    TweenService:Create(toggleButton, TweenInfo.new(0.2), {
+        BackgroundColor3 = Color3.fromRGB(25, 25, 30),
+        Size = UDim2.new(0, 50, 0, 50)
+    }):Play()
+    TweenService:Create(uiStroke, TweenInfo.new(0.2), {
+        Transparency = 0.3
+    }):Play()
 end)
 
 return NexusUI
