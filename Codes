@@ -601,9 +601,7 @@ function NexusUI:MakeWindow(WindowConfig)
 		Size = UDim2.new(1, 0, 0, 50)
 	})
 
-	-- (Kode sebelumnya tetap sama hingga bagian WindowStuff)
-
-local WindowStuff = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 12), {
+	local WindowStuff = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 12), {
     Size = UDim2.new(0, 160, 1, -50),
     Position = UDim2.new(0, 0, 0, 50),
     ClipsDescendants = true
@@ -621,7 +619,7 @@ local WindowStuff = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame"
         Position = UDim2.new(1, -1, 0, 0)
     }), "Stroke"), 
     
-    -- Search Box dengan posisi yang tepat
+    -- Search Box (50px tinggi)
     SetChildren(SetProps(MakeElement("TFrame"), {
         Size = UDim2.new(1, 0, 0, 50),
         Position = UDim2.new(0, 0, 0, 0),
@@ -631,15 +629,13 @@ local WindowStuff = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame"
             Size = UDim2.new(1, -20, 0, 32),
             Position = UDim2.new(0, 10, 0.5, 0),
             AnchorPoint = Vector2.new(0, 0.5),
-            BackgroundTransparency = 0.9,
-            ZIndex = 10
+            BackgroundTransparency = 0.9
         }), {
             AddThemeObject(SetProps(MakeElement("Image", "rbxassetid://3926307971"), {
                 Size = UDim2.new(0, 20, 0, 20),
                 Position = UDim2.new(0, 8, 0, 6),
                 ImageRectOffset = Vector2.new(964, 324),
-                ImageRectSize = Vector2.new(36, 36),
-                ZIndex = 11
+                ImageRectSize = Vector2.new(36, 36)
             }), "TextDark"),
             AddThemeObject(Create("TextBox", {
                 Size = UDim2.new(1, -40, 1, 0),
@@ -652,62 +648,66 @@ local WindowStuff = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame"
                 TextSize = 14,
                 Font = Enum.Font.Gotham,
                 TextXAlignment = Enum.TextXAlignment.Left,
-                ClearTextOnFocus = false,
-                ZIndex = 11
+                ClearTextOnFocus = false
             }), "Text"),
             AddThemeObject(MakeElement("Stroke"), "Stroke")
         }), "Second")
     }),
     
-    -- TabHolder dengan posisi di bawah search box
+    -- Tab Container dengan tinggi yang fleksibel
     SetChildren(SetProps(MakeElement("TFrame"), {
-        Size = UDim2.new(1, 0, 1, -110), -- Kurangi tinggi untuk memberi ruang search dan profil
+        Size = UDim2.new(1, 0, 1, -110), -- Sisa tinggi setelah search (50) dan profil (60)
         Position = UDim2.new(0, 0, 0, 50),
-        Name = "TabListContainer"
+        Name = "TabContainer"
     }), {
         AddThemeObject(SetChildren(SetProps(MakeElement("ScrollFrame", Color3.fromRGB(255, 255, 255), 4), {
             Size = UDim2.new(1, 0, 1, 0),
             Position = UDim2.new(0, 0, 0, 0),
             BackgroundTransparency = 1,
-            ZIndex = 5
+            Name = "TabScrollFrame"
         }), {
             MakeElement("List"),
             MakeElement("Padding", 8, 0, 0, 8)
         }), "Divider")
     }),
     
-    -- Profil section di bagian bawah
+    -- Profil Section (60px tinggi)
     SetChildren(SetProps(MakeElement("TFrame"), {
         Size = UDim2.new(1, 0, 0, 60),
         Position = UDim2.new(0, 0, 1, -60),
         Name = "ProfileContainer"
     }), {
-        AddThemeObject(SetProps(MakeElement("Frame", Color3.fromRGB(40, 40, 45)), {
+        AddThemeObject(SetProps(MakeElement("Frame"), {
             Size = UDim2.new(1, 0, 0, 1),
             Position = UDim2.new(0, 0, 0, 0)
-        }), "Stroke"),
+        }), "Stroke"), 
         
-        -- Avatar frame
-        AddThemeObject(SetChildren(SetProps(MakeElement("Frame", Color3.fromRGB(40, 40, 45)), {
-            AnchorPoint = Vector2.new(0, 0.5),
-            Size = UDim2.new(0, 32, 0, 32),
-            Position = UDim2.new(0, 10, 0.5, 0),
-            BackgroundTransparency = 0
-        }), {
-            SetProps(MakeElement("Image", "https://www.roblox.com/headshot-thumbnail/image?userId=".. LocalPlayer.UserId .."&width=420&height=420&format=png"), {
-                Size = UDim2.new(1, 0, 1, 0),
-                BackgroundTransparency = 1
-            }),
-            MakeElement("Corner", 1)
-        }), "Divider"),
-        
-        AddThemeObject(SetChildren(SetProps(MakeElement("TFrame"), {
+        -- Avatar Frame
+        SetChildren(SetProps(MakeElement("TFrame"), {
             AnchorPoint = Vector2.new(0, 0.5),
             Size = UDim2.new(0, 32, 0, 32),
             Position = UDim2.new(0, 10, 0.5, 0)
         }), {
-            AddThemeObject(MakeElement("Stroke"), "Stroke"),
-            MakeElement("Corner", 1)
+            AddThemeObject(SetChildren(SetProps(MakeElement("Frame"), {
+                Size = UDim2.new(1, 0, 1, 0),
+                BackgroundTransparency = 0
+            }), {
+                SetProps(MakeElement("Image", "https://www.roblox.com/headshot-thumbnail/image?userId=".. LocalPlayer.UserId .."&width=420&height=420&format=png"), {
+                    Size = UDim2.new(1, 0, 1, 0)
+                }),
+                AddThemeObject(SetProps(MakeElement("Image", "rbxassetid://4031889928"), {
+                    Size = UDim2.new(1, 0, 1, 0),
+                }), "Second"),
+                MakeElement("Corner", 1)
+            }), "Divider"),
+            
+            -- Stroke untuk avatar
+            SetChildren(SetProps(MakeElement("TFrame"), {
+                Size = UDim2.new(1, 0, 1, 0)
+            }), {
+                AddThemeObject(MakeElement("Stroke"), "Stroke"),
+                MakeElement("Corner", 1)
+            })
         }),
         
         -- Username
@@ -718,7 +718,7 @@ local WindowStuff = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame"
             ClipsDescendants = true
         }), "Text"),
         
-        -- Premium indicator (jika tidak disembunyikan)
+        -- Premium Indicator (jika tidak disembunyikan)
         AddThemeObject(SetProps(MakeElement("Label", "", 12), {
             Size = UDim2.new(1, -60, 0, 12),
             Position = UDim2.new(0, 50, 1, -25),
@@ -727,38 +727,32 @@ local WindowStuff = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame"
     })
 }), "Second")
 
--- Get references to the important containers
-local TabListContainer = WindowStuff:FindFirstChild("TabListContainer")
-local TabHolder = TabListContainer:FindFirstChildWhichIsA("ScrollingFrame")
+-- Get references
+local TabContainer = WindowStuff.TabContainer
+local TabHolder = TabContainer.TabScrollFrame
 local SearchBox = WindowStuff.SearchContainer:FindFirstChildWhichIsA("Frame"):FindFirstChildWhichIsA("TextBox")
+
+-- Update TabHolder connection untuk canvas size
+AddConnection(TabHolder.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
+    TabHolder.CanvasSize = UDim2.new(0, 0, 0, TabHolder.UIListLayout.AbsoluteContentSize.Y + 16)
+end)
 
 -- Store tabs for search functionality
 local TabButtons = {}
 
 local function FilterTabs(searchText)
     searchText = string.lower(searchText or "")
-    local anyVisible = false
     local visibleCount = 0
     
     for tabName, tabButton in pairs(TabButtons) do
         local tabNameLower = string.lower(tabName)
         if searchText == "" or string.find(tabNameLower, searchText, 1, true) then
             tabButton.Visible = true
-            anyVisible = true
             visibleCount = visibleCount + 1
         else
             tabButton.Visible = false
         end
     end
-    
-    -- Atur tinggi TabHolder berdasarkan jumlah tab yang terlihat
-    local maxVisibleTabs = 6 -- Maksimal 6 tab yang bisa dilihat tanpa scroll
-    local newHeight = math.min(visibleCount * 32 + 16, maxVisibleTabs * 32 + 16)
-    
-    TabListContainer.Size = UDim2.new(1, 0, 1, -110) -- Tetap sama
-    
-    -- Update canvas size untuk scrolling
-    TabHolder.CanvasSize = UDim2.new(0, 0, 0, visibleCount * 32 + 16)
 end
 
 -- Connect search functionality
@@ -769,9 +763,57 @@ AddConnection(SearchBox.Changed, function(property)
     end
 end)
 
--- (Kode setelah ini tetap sama...)
+local WindowName = AddThemeObject(SetProps(MakeElement("Label", WindowConfig.Name, 14), {
+    Size = UDim2.new(1, -30, 2, 0),
+    Position = UDim2.new(0, 25, 0, -24),
+    Font = Enum.Font.GothamBlack,
+    TextSize = 20
+}), "Text")
 
--- Di dalam function TabFunction:MakeTab, perbarui bagian ini:
+local WindowTopBarLine = AddThemeObject(SetProps(MakeElement("Frame"), {
+    Size = UDim2.new(1, 0, 0, 1),
+    Position = UDim2.new(0, 0, 1, -1)
+}), "Stroke")
+
+local MainWindow = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 12), {
+    Parent = Nexus,
+    Position = UDim2.new(0.5, -307, 0.5, -172),
+    Size = UDim2.new(0, 615, 0, 344),
+    ClipsDescendants = true
+}), {
+    SetChildren(SetProps(MakeElement("TFrame"), {
+        Size = UDim2.new(1, 0, 0, 50),
+        Name = "TopBar"
+    }), {
+        WindowName,
+        WindowTopBarLine,
+        AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 7), {
+            Size = UDim2.new(0, 70, 0, 30),
+            Position = UDim2.new(1, -90, 0, 10)
+        }), {
+            AddThemeObject(MakeElement("Stroke"), "Stroke"),
+            AddThemeObject(SetProps(MakeElement("Frame"), {
+                Size = UDim2.new(0, 1, 1, 0),
+                Position = UDim2.new(0.5, 0, 0, 0)
+            }), "Stroke"), 
+            CloseBtn,
+            MinimizeBtn
+        }), "Second"), 
+    }),
+    DragPoint,
+    WindowStuff
+}), "Main")
+
+if WindowConfig.ShowIcon then
+    WindowName.Position = UDim2.new(0, 50, 0, -24)
+    local WindowIcon = SetProps(MakeElement("Image", WindowConfig.Icon), {
+        Size = UDim2.new(0, 20, 0, 20),
+        Position = UDim2.new(0, 25, 0, 15)
+    })
+    WindowIcon.Parent = MainWindow.TopBar
+end
+
+-- Di dalam function TabFunction:MakeTab, update bagian ini:
 function TabFunction:MakeTab(TabConfig)
     TabConfig = TabConfig or {}
     TabConfig.Name = TabConfig.Name or "Tab"
@@ -779,8 +821,8 @@ function TabFunction:MakeTab(TabConfig)
     TabConfig.PremiumOnly = TabConfig.PremiumOnly or false
 
     local TabFrame = SetChildren(SetProps(MakeElement("Button"), {
-        Size = UDim2.new(1, -20, 0, 32), -- Lebar dikurangi untuk memberikan ruang scrollbar
-        Parent = TabHolder,
+        Size = UDim2.new(1, -20, 0, 32),
+        Parent = TabHolder, -- Menggunakan TabHolder yang baru
         ZIndex = 6
     }), {
         AddThemeObject(SetProps(MakeElement("Image", TabConfig.Icon), {
@@ -808,7 +850,7 @@ function TabFunction:MakeTab(TabConfig)
         TabFrame.Ico.Image = GetIcon(TabConfig.Icon)
     end
 
-    -- (Kode lainnya tetap sama...)
+    -- (Kode selanjutnya untuk membuat Container, dll...)
 end	
 
 	AddDraggingFunctionality(DragPoint, MainWindow)
