@@ -1198,31 +1198,38 @@ function NexusUI:MakeWindow(WindowConfig)
     DropdownConfig.Callback = DropdownConfig.Callback or function() end
     DropdownConfig.Flag = DropdownConfig.Flag or nil
     DropdownConfig.Save = DropdownConfig.Save or false
-    DropdownConfig.SearchEnabled = DropdownConfig.SearchEnabled or true
+    DropdownConfig.SearchEnabled = DropdownConfig.SearchEnabled or false -- Default false
 
-    local Dropdown = {Value = DropdownConfig.Default, Options = DropdownConfig.Options, Buttons = {}, Toggled = false, Type = "Dropdown", Save = DropdownConfig.Save}
+    local Dropdown = {
+        Value = DropdownConfig.Default, 
+        Options = DropdownConfig.Options, 
+        OriginalOptions = DropdownConfig.Options, -- Simpan opsi asli untuk search
+        Buttons = {}, 
+        Toggled = false, 
+        Type = "Dropdown", 
+        Save = DropdownConfig.Save
+    }
     local MaxElements = 5
-    local AllOptions = table.clone(DropdownConfig.Options) -- Simpan semua opsi asli
 
     if not table.find(Dropdown.Options, Dropdown.Value) then
         Dropdown.Value = "..."
     end
 
-    -- Buat frame utama dropdown
+    -- Buat container utama dropdown (akan di-expand)
     local DropdownFrame = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 6), {
         Size = UDim2.new(1, 0, 0, 38),
         Parent = ItemParent,
-        ClipsDescendants = false -- Biarkan false agar dropdown bisa keluar
+        ClipsDescendants = true,
+        BackgroundTransparency = 0
     }), {
-        AddThemeObject(SetProps(MakeElement("Stroke"), "Stroke"), "Stroke"),
-        MakeElement("Corner", 0, 6)
+        AddThemeObject(MakeElement("Stroke"), "Stroke")
     }), "Second")
 
-    -- Buat bagian header dropdown
-    local DropdownHeader = SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 6), {
+    -- Header dropdown (bagian yang selalu terlihat)
+    local DropdownHeader = SetChildren(SetProps(MakeElement("TFrame"), {
         Size = UDim2.new(1, 0, 0, 38),
         Parent = DropdownFrame,
-        ZIndex = 10
+        BackgroundTransparency = 1
     }), {
         AddThemeObject(SetProps(MakeElement("Label", DropdownConfig.Name, 15), {
             Size = UDim2.new(1, -12, 1, 0),
@@ -1243,45 +1250,47 @@ function NexusUI:MakeWindow(WindowConfig)
             Name = "Selected",
             TextXAlignment = Enum.TextXAlignment.Right
         }), "TextDark"),
-        AddThemeObject(SetProps(MakeElement("Button"), {
+        AddThemeObject(SetProps(MakeElement("Frame"), {
+            Size = UDim2.new(1, 0, 0, 1),
+            Position = UDim2.new(0, 0, 1, -1),
+            Name = "Line",
+            Visible = false
+        }), "Stroke"), 
+        SetProps(MakeElement("Button"), {
             Size = UDim2.new(1, 0, 1, 0),
-            BackgroundTransparency = 1
-        }), "Main")
+            BackgroundTransparency = 1,
+            Name = "ClickBtn"
+        })
     })
 
-    -- Buat container untuk dropdown items (akan muncul di atas)
-    local DropdownContainer = AddThemeObject(SetChildren(SetProps(MakeElement("Frame"), {
+    -- Container untuk dropdown items (akan muncul di bawah header)
+    local ItemsContainer = SetProps(MakeElement("TFrame"), {
         Size = UDim2.new(1, 0, 0, 0),
-        Position = UDim2.new(0, 0, 0, -150), -- Muncul di atas
-        BackgroundColor3 = Color3.fromRGB(30, 30, 35),
-        BorderSizePixel = 0,
-        Parent = DropdownFrame,
+        Position = UDim2.new(0, 0, 0, 38),
+        BackgroundTransparency = 1,
+        ClipsDescendants = true,
         Visible = false,
-        ZIndex = 100,
-        ClipsDescendants = true
-    }), {
-        MakeElement("Corner", 0, 6),
-        AddThemeObject(SetProps(MakeElement("Stroke"), "Stroke"), "Stroke")
-    }), "Second")
+        Name = "ItemsContainer"
+    })
+    ItemsContainer.Parent = DropdownFrame
 
-    -- Tambahkan search box jika diaktifkan
+    -- Search box (jika diaktifkan)
     local SearchBox
     if DropdownConfig.SearchEnabled then
-        local SearchContainer = SetChildren(SetProps(MakeElement("Frame"), {
+        local SearchContainer = SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 6), {
             Size = UDim2.new(1, -16, 0, 32),
             Position = UDim2.new(0, 8, 0, 8),
-            BackgroundColor3 = Color3.fromRGB(40, 40, 45),
-            BorderSizePixel = 0
+            BackgroundTransparency = 0.9,
+            Parent = ItemsContainer
         }), {
-            MakeElement("Corner", 0, 6),
             AddThemeObject(SetProps(MakeElement("Image", "rbxassetid://3926307971"), {
                 Size = UDim2.new(0, 20, 0, 20),
                 Position = UDim2.new(0, 8, 0, 6),
                 ImageRectOffset = Vector2.new(964, 324),
                 ImageRectSize = Vector2.new(36, 36),
-                ImageColor3 = Color3.fromRGB(180, 180, 185)
+                ImageTransparency = 0.4
             }), "TextDark"),
-            AddThemeObject(SetProps(Create("TextBox", {
+            SetProps(Create("TextBox", {
                 Size = UDim2.new(1, -40, 1, 0),
                 Position = UDim2.new(0, 35, 0, 0),
                 BackgroundTransparency = 1,
@@ -1289,115 +1298,119 @@ function NexusUI:MakeWindow(WindowConfig)
                 PlaceholderText = "Search...",
                 PlaceholderColor3 = Color3.fromRGB(150, 150, 150),
                 TextColor3 = Color3.fromRGB(240, 240, 240),
-                TextSize = 14,
+                TextSize = 13,
                 Font = Enum.Font.Gotham,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 ClearTextOnFocus = false
-            }), "Text"), "Text"),
-            AddThemeObject(SetProps(MakeElement("Stroke"), "Stroke"), "Stroke")
+            }), {
+                Name = "SearchBox"
+            }),
+            AddThemeObject(MakeElement("Stroke"), "Stroke")
         })
         
-        SearchContainer.Parent = DropdownContainer
-        SearchBox = SearchContainer:FindFirstChildWhichIsA("TextBox")
+        SearchBox = SearchContainer:FindFirstChild("SearchBox")
+        
+        -- Connect search functionality
+        if SearchBox then
+            AddConnection(SearchBox:GetPropertyChangedSignal("Text"), function()
+                local searchText = string.lower(SearchBox.Text)
+                
+                for _, OptionBtn in pairs(Dropdown.Buttons) do
+                    local optionText = OptionBtn:FindFirstChild("Title")
+                    if optionText then
+                        if searchText == "" or string.find(string.lower(optionText.Text), searchText, 1, true) then
+                            OptionBtn.Visible = true
+                        else
+                            OptionBtn.Visible = false
+                        end
+                    end
+                end
+            end)
+        end
     end
 
-    -- Buat scrolling frame untuk opsi
-    local OptionsFrame = AddThemeObject(SetChildren(SetProps(MakeElement("ScrollingFrame"), {
+    -- Scrolling frame untuk opsi
+    local OptionsFrame = AddThemeObject(SetChildren(SetProps(MakeElement("ScrollFrame", Color3.fromRGB(255, 255, 255), 4), {
         Size = UDim2.new(1, -16, 1, DropdownConfig.SearchEnabled and -48 or -16),
-        Position = UDim2.new(0, 8, 0, DropdownConfig.SearchEnabled and 48 or 8),
+        Position = UDim2.new(0, 8, DropdownConfig.SearchEnabled and 48 or 8),
         BackgroundTransparency = 1,
         ScrollBarThickness = 4,
         BorderSizePixel = 0,
         CanvasSize = UDim2.new(0, 0, 0, 0),
-        ZIndex = 101
+        Parent = ItemsContainer
     }), {
         MakeElement("List", 0, 4),
         MakeElement("Padding", 0, 0, 0, 4)
     }), "Divider")
 
-    OptionsFrame.Parent = DropdownContainer
+    AddConnection(OptionsFrame.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
+        OptionsFrame.CanvasSize = UDim2.new(0, 0, 0, OptionsFrame.UIListLayout.AbsoluteContentSize.Y + 8)
+    end)
 
     -- Fungsi untuk menambahkan opsi
-    local function AddOptions(options)
-        -- Hapus opsi lama
-        for _, btn in pairs(Dropdown.Buttons) do
-            btn:Destroy()
-        end
-        Dropdown.Buttons = {}
-        
-        -- Tambah opsi baru
-        for _, option in ipairs(options) do
-            local OptionBtn = AddThemeObject(SetChildren(SetProps(MakeElement("TextButton"), {
-                Size = UDim2.new(1, 0, 0, 28),
-                BackgroundColor3 = Color3.fromRGB(40, 40, 45),
-                BorderSizePixel = 0,
-                Text = "",
-                AutoButtonColor = false,
-                Parent = OptionsFrame,
-                ZIndex = 102
-            }), {
-                MakeElement("Corner", 0, 4),
-                AddThemeObject(SetProps(MakeElement("Label", option, 14), {
-                    Size = UDim2.new(1, -12, 1, 0),
+    local function AddOptions(Options)
+        for _, Option in pairs(Options) do
+            local OptionBtn = AddThemeObject(SetChildren(SetProps(MakeElement("Button", Color3.fromRGB(40, 40, 40)), {
+                MakeElement("Corner", 0, 6),
+                AddThemeObject(SetProps(MakeElement("Label", Option, 13, 0.4), {
                     Position = UDim2.new(0, 8, 0, 0),
-                    Font = Enum.Font.GothamSemibold,
-                    TextColor3 = Color3.fromRGB(200, 200, 200)
+                    Size = UDim2.new(1, -8, 1, 0),
+                    Name = "Title"
                 }), "Text")
+            }), {
+                Parent = OptionsFrame,
+                Size = UDim2.new(1, 0, 0, 28),
+                BackgroundTransparency = 1,
+                ClipsDescendants = true
             }), "Divider")
 
-            -- Simpan button
-            Dropdown.Buttons[option] = OptionBtn
-
-            -- Event klik
-            OptionBtn.MouseButton1Click:Connect(function()
-                Dropdown:Set(option)
-                DropdownContainer.Visible = false
+            AddConnection(OptionBtn.MouseButton1Click, function()
+                Dropdown:Set(Option)
+                SaveCfg(game.GameId)
+                
+                -- Tutup dropdown setelah memilih
                 Dropdown.Toggled = false
-                TweenService:Create(DropdownHeader.Ico, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                DropdownHeader.Line.Visible = false
+                ItemsContainer.Visible = false
+                TweenService:Create(DropdownFrame, TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(1, 0, 0, 38)
+                }):Play()
+                TweenService:Create(DropdownHeader.Ico, TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     Rotation = 0
                 }):Play()
             end)
 
             -- Hover effect
-            OptionBtn.MouseEnter:Connect(function()
+            AddConnection(OptionBtn.MouseEnter, function()
                 TweenService:Create(OptionBtn, TweenInfo.new(0.2), {
-                    BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+                    BackgroundTransparency = 0.8
                 }):Play()
             end)
 
-            OptionBtn.MouseLeave:Connect(function()
+            AddConnection(OptionBtn.MouseLeave, function()
                 TweenService:Create(OptionBtn, TweenInfo.new(0.2), {
-                    BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+                    BackgroundTransparency = 1
                 }):Play()
             end)
+
+            Dropdown.Buttons[Option] = OptionBtn
         end
-        
-        -- Update canvas size
-        local totalHeight = #options * 32
-        OptionsFrame.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
     end
 
-    -- Fungsi filter search
-    local function FilterOptions(searchText)
-        searchText = string.lower(searchText or "")
-        local filtered = {}
-        
-        for _, option in ipairs(AllOptions) do
-            if searchText == "" or string.find(string.lower(option), searchText, 1, true) then
-                table.insert(filtered, option)
+    -- Fungsi untuk menghitung tinggi dropdown
+    local function CalculateDropdownHeight()
+        local visibleCount = 0
+        for _, btn in pairs(Dropdown.Buttons) do
+            if btn.Visible then
+                visibleCount = visibleCount + 1
             end
         end
         
-        AddOptions(filtered)
-    end
-
-    -- Connect search functionality
-    if DropdownConfig.SearchEnabled and SearchBox then
-        AddConnection(SearchBox.Changed, function(property)
-            if property == "Text" then
-                FilterOptions(SearchBox.Text)
-            end
-        end)
+        local searchHeight = DropdownConfig.SearchEnabled and 48 or 0
+        local optionsHeight = math.min(visibleCount * 32, MaxElements * 32)
+        local padding = 16
+        
+        return 38 + searchHeight + optionsHeight + padding
     end
 
     -- Fungsi refresh
@@ -1408,103 +1421,93 @@ function NexusUI:MakeWindow(WindowConfig)
             end    
             table.clear(Dropdown.Buttons)
         end
-        
         Dropdown.Options = Options
-        AllOptions = table.clone(Options)
-        AddOptions(AllOptions)
-        self:Set(Dropdown.Value)
+        Dropdown.OriginalOptions = Options
+        AddOptions(Dropdown.Options)
     end  
 
     -- Fungsi set value
     function Dropdown:Set(Value)
-        if not table.find(AllOptions, Value) then
+        if not table.find(Dropdown.OriginalOptions, Value) then
             Dropdown.Value = "..."
             DropdownHeader.Selected.Text = "Select..."
             return
         end
 
         Dropdown.Value = Value
-        DropdownHeader.Selected.Text = Value
-        DropdownConfig.Callback(Value)
+        DropdownHeader.Selected.Text = Dropdown.Value
         
         -- Highlight selected option
-        for _, btn in pairs(Dropdown.Buttons) do
-            local optionText = btn:FindFirstChildWhichIsA("TextLabel").Text
-            if optionText == Value then
-                TweenService:Create(btn, TweenInfo.new(0.2), {
-                    BackgroundColor3 = Color3.fromRGB(70, 0, 255)
+        for optionName, OptionBtn in pairs(Dropdown.Buttons) do
+            if optionName == Value then
+                TweenService:Create(OptionBtn, TweenInfo.new(0.2), {
+                    BackgroundTransparency = 0.5
                 }):Play()
-                TweenService:Create(btn:FindFirstChildWhichIsA("TextLabel"), TweenInfo.new(0.2), {
-                    TextColor3 = Color3.fromRGB(255, 255, 255)
+                TweenService:Create(OptionBtn.Title, TweenInfo.new(0.2), {
+                    TextTransparency = 0
                 }):Play()
             else
-                TweenService:Create(btn, TweenInfo.new(0.2), {
-                    BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+                TweenService:Create(OptionBtn, TweenInfo.new(0.2), {
+                    BackgroundTransparency = 1
                 }):Play()
-                TweenService:Create(btn:FindFirstChildWhichIsA("TextLabel"), TweenInfo.new(0.2), {
-                    TextColor3 = Color3.fromRGB(200, 200, 200)
+                TweenService:Create(OptionBtn.Title, TweenInfo.new(0.2), {
+                    TextTransparency = 0.4
                 }):Play()
             end
         end
+        
+        DropdownConfig.Callback(Dropdown.Value)
     end
 
     -- Toggle dropdown
-    AddConnection(DropdownHeader:FindFirstChildWhichIsA("TextButton").MouseButton1Click, function()
+    AddConnection(DropdownHeader.ClickBtn.MouseButton1Click, function()
         Dropdown.Toggled = not Dropdown.Toggled
         
         if Dropdown.Toggled then
-            -- Tampilkan dropdown
-            DropdownContainer.Visible = true
-            
-            -- Reset search jika ada
+            -- Reset search box
             if SearchBox then
                 SearchBox.Text = ""
             end
             
-            -- Add semua opsi
-            AddOptions(AllOptions)
+            -- Show all options
+            for _, btn in pairs(Dropdown.Buttons) do
+                btn.Visible = true
+            end
             
-            -- Hitung tinggi maksimal
-            local maxHeight = math.min(#AllOptions * 32 + (DropdownConfig.SearchEnabled and 48 or 16), 200)
-            DropdownContainer.Size = UDim2.new(1, 0, 0, maxHeight)
-            DropdownContainer.Position = UDim2.new(0, 0, 0, -maxHeight - 5)
+            DropdownHeader.Line.Visible = true
+            ItemsContainer.Visible = true
+            ItemsContainer.Size = UDim2.new(1, 0, 0, 0)
             
-            -- Rotate icon
-            TweenService:Create(DropdownHeader.Ico, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            local targetHeight = CalculateDropdownHeight()
+            TweenService:Create(DropdownFrame, TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = UDim2.new(1, 0, 0, targetHeight)
+            }):Play()
+            TweenService:Create(ItemsContainer, TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = UDim2.new(1, 0, 0, targetHeight - 38)
+            }):Play()
+            TweenService:Create(DropdownHeader.Ico, TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                 Rotation = 180
             }):Play()
         else
-            -- Sembunyikan dropdown
-            DropdownContainer.Visible = false
-            
-            -- Rotate icon kembali
-            TweenService:Create(DropdownHeader.Ico, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            DropdownHeader.Line.Visible = false
+            TweenService:Create(DropdownFrame, TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = UDim2.new(1, 0, 0, 38)
+            }):Play()
+            TweenService:Create(DropdownHeader.Ico, TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                 Rotation = 0
             }):Play()
-        end
-    end)
-
-    -- Click outside to close
-    AddConnection(UserInputService.InputBegan, function(input)
-        if Dropdown.Toggled and input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local mousePos = UserInputService:GetMouseLocation()
-            local containerPos = DropdownContainer.AbsolutePosition
-            local containerSize = DropdownContainer.AbsoluteSize
             
-            if not (mousePos.X >= containerPos.X and mousePos.X <= containerPos.X + containerSize.X and
-                   mousePos.Y >= containerPos.Y and mousePos.Y <= containerPos.Y + containerSize.Y) then
-                
-                DropdownContainer.Visible = false
-                Dropdown.Toggled = false
-                TweenService:Create(DropdownHeader.Ico, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    Rotation = 0
-                }):Play()
-            end
+            -- Hide items container after animation
+            delay(0.15, function()
+                if not Dropdown.Toggled then
+                    ItemsContainer.Visible = false
+                end
+            end)
         end
     end)
 
-    -- Inisialisasi awal
-    AddOptions(AllOptions)
+    -- Inisialisasi
+    Dropdown:Refresh(Dropdown.Options, false)
     Dropdown:Set(Dropdown.Value)
     
     if DropdownConfig.Flag then                
