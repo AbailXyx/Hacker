@@ -1198,24 +1198,83 @@ function NexusUI:MakeWindow(WindowConfig)
 				DropdownConfig.Callback = DropdownConfig.Callback or function() end
 				DropdownConfig.Flag = DropdownConfig.Flag or nil
 				DropdownConfig.Save = DropdownConfig.Save or false
+				DropdownConfig.SearchEnabled = DropdownConfig.SearchEnabled or true -- Fitur search baru
 
 				local Dropdown = {Value = DropdownConfig.Default, Options = DropdownConfig.Options, Buttons = {}, Toggled = false, Type = "Dropdown", Save = DropdownConfig.Save}
 				local MaxElements = 5
+				local AllOptions = DropdownConfig.Options -- Simpan semua opsi asli
 
 				if not table.find(Dropdown.Options, Dropdown.Value) then
 					Dropdown.Value = "..."
 				end
 
 				local DropdownList = MakeElement("List")
+				
+				-- Tambahkan search box jika diaktifkan
+				local SearchBox
+				local SearchContainer
+				
+				if DropdownConfig.SearchEnabled then
+					SearchContainer = SetChildren(SetProps(MakeElement("TFrame"), {
+						Size = UDim2.new(1, -20, 0, 32),
+						Position = UDim2.new(0, 10, 0, 10),
+						Name = "SearchContainer"
+					}), {
+						AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 6), {
+							Size = UDim2.new(1, 0, 1, 0),
+							BackgroundTransparency = 0.9
+						}), {
+							AddThemeObject(SetProps(MakeElement("Image", "rbxassetid://3926307971"), {
+								Size = UDim2.new(0, 20, 0, 20),
+								Position = UDim2.new(0, 8, 0, 6),
+								ImageRectOffset = Vector2.new(964, 324),
+								ImageRectSize = Vector2.new(36, 36)
+							}), "TextDark"),
+							AddThemeObject(SetProps(Create("TextBox", {
+								Size = UDim2.new(1, -40, 1, 0),
+								Position = UDim2.new(0, 35, 0, 0),
+								BackgroundTransparency = 1,
+								Text = "",
+								PlaceholderText = "Search options...",
+								PlaceholderColor3 = Color3.fromRGB(150, 150, 150),
+								TextColor3 = Color3.fromRGB(240, 240, 240),
+								TextSize = 13,
+								Font = Enum.Font.Gotham,
+								TextXAlignment = Enum.TextXAlignment.Left,
+								ClearTextOnFocus = false
+							}), "Text"), "Text"),
+							AddThemeObject(MakeElement("Stroke"), "Stroke")
+						}), "Second")
+					})
+					
+					SearchBox = SearchContainer:FindFirstChildWhichIsA("Frame"):FindFirstChildWhichIsA("TextBox")
+				end
 
-				local DropdownContainer = AddThemeObject(SetProps(SetChildren(MakeElement("ScrollFrame", Color3.fromRGB(40, 40, 40), 4), {
+				local OptionsScrollingFrame = AddThemeObject(SetProps(SetChildren(MakeElement("ScrollFrame", Color3.fromRGB(40, 40, 40), 4), {
 					DropdownList
 				}), {
+					Position = DropdownConfig.SearchEnabled and UDim2.new(0, 0, 0, 52) or UDim2.new(0, 0, 0, 0),
+					Size = DropdownConfig.SearchEnabled and UDim2.new(1, 0, 1, -52) or UDim2.new(1, 0, 1, 0),
+					ClipsDescendants = true,
+					BackgroundTransparency = 1
+				}), "Divider")
+
+				local DropdownContainer = AddThemeObject(SetChildren(SetProps(MakeElement("Frame", Color3.fromRGB(30, 30, 35)), {
 					Parent = ItemParent,
 					Position = UDim2.new(0, 0, 0, 38),
 					Size = UDim2.new(1, 0, 1, -38),
-					ClipsDescendants = true
-				}), "Divider")
+					ClipsDescendants = true,
+					BackgroundTransparency = 0,
+					Visible = false
+				}), {
+					MakeElement("Corner", 0, 6),
+					AddThemeObject(MakeElement("Stroke"), "Stroke"),
+					OptionsScrollingFrame
+				}), "Second")
+				
+				if DropdownConfig.SearchEnabled then
+					SearchContainer.Parent = DropdownContainer
+				end
 
 				local Click = SetProps(MakeElement("Button"), {
 					Size = UDim2.new(1, 0, 1, 0)
@@ -1264,7 +1323,19 @@ function NexusUI:MakeWindow(WindowConfig)
 				}), "Second")
 
 				AddConnection(DropdownList:GetPropertyChangedSignal("AbsoluteContentSize"), function()
-					DropdownContainer.CanvasSize = UDim2.new(0, 0, 0, DropdownList.AbsoluteContentSize.Y)
+					OptionsScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, DropdownList.AbsoluteContentSize.Y)
+					
+					-- Update ukuran dropdown berdasarkan apakah search diaktifkan
+					local baseHeight = 38
+					local searchHeight = DropdownConfig.SearchEnabled and 52 or 0
+					local optionsHeight = math.min(DropdownList.AbsoluteContentSize.Y, MaxElements * 28)
+					
+					if Dropdown.Toggled then
+						local totalHeight = baseHeight + searchHeight + optionsHeight + 10
+						TweenService:Create(DropdownFrame, TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+							Size = UDim2.new(1, 0, 0, totalHeight)
+						}):Play()
+					end
 				end)  
 
 				local function AddOptions(Options)
@@ -1277,7 +1348,7 @@ function NexusUI:MakeWindow(WindowConfig)
 								Name = "Title"
 							}), "Text")
 						}), {
-							Parent = DropdownContainer,
+							Parent = OptionsScrollingFrame,
 							Size = UDim2.new(1, 0, 0, 28),
 							BackgroundTransparency = 1,
 							ClipsDescendants = true
@@ -1292,6 +1363,32 @@ function NexusUI:MakeWindow(WindowConfig)
 					end
 				end	
 
+				-- Fungsi untuk memfilter opsi berdasarkan teks pencarian
+				local function FilterOptions(searchText)
+					searchText = string.lower(searchText or "")
+					
+					for optionName, optionButton in pairs(Dropdown.Buttons) do
+						if searchText == "" or string.find(string.lower(optionName), searchText, 1, true) then
+							optionButton.Visible = true
+						else
+							optionButton.Visible = false
+						end
+					end
+					
+					-- Update canvas size setelah filter
+					wait()
+					OptionsScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, DropdownList.AbsoluteContentSize.Y)
+				end
+
+				-- Connect search functionality jika diaktifkan
+				if DropdownConfig.SearchEnabled and SearchBox then
+					AddConnection(SearchBox.Changed, function(property)
+						if property == "Text" then
+							FilterOptions(SearchBox.Text)
+						end
+					end)
+				end
+
 				function Dropdown:Refresh(Options, Delete)
 					if Delete then
 						for _,v in pairs(Dropdown.Buttons) do
@@ -1301,11 +1398,12 @@ function NexusUI:MakeWindow(WindowConfig)
 						table.clear(Dropdown.Buttons)
 					end
 					Dropdown.Options = Options
+					AllOptions = Options -- Update semua opsi
 					AddOptions(Dropdown.Options)
 				end  
 
 				function Dropdown:Set(Value)
-					if not table.find(Dropdown.Options, Value) then
+					if not table.find(AllOptions, Value) then
 						Dropdown.Value = "..."
 						DropdownFrame.F.Selected.Text = Dropdown.Value
 						for _, v in pairs(Dropdown.Buttons) do
@@ -1322,20 +1420,35 @@ function NexusUI:MakeWindow(WindowConfig)
 						TweenService:Create(v,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{BackgroundTransparency = 1}):Play()
 						TweenService:Create(v.Title,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{TextTransparency = 0.4}):Play()
 					end	
-					TweenService:Create(Dropdown.Buttons[Value],TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{BackgroundTransparency = 0}):Play()
-					TweenService:Create(Dropdown.Buttons[Value].Title,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{TextTransparency = 0}):Play()
+					
+					if Dropdown.Buttons[Value] then
+						TweenService:Create(Dropdown.Buttons[Value],TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{BackgroundTransparency = 0}):Play()
+						TweenService:Create(Dropdown.Buttons[Value].Title,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{TextTransparency = 0}):Play()
+					end
+					
 					return DropdownConfig.Callback(Dropdown.Value)
 				end
 
 				AddConnection(Click.MouseButton1Click, function()
 					Dropdown.Toggled = not Dropdown.Toggled
 					DropdownFrame.F.Line.Visible = Dropdown.Toggled
+					DropdownContainer.Visible = Dropdown.Toggled
 					TweenService:Create(DropdownFrame.F.Ico,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{Rotation = Dropdown.Toggled and 180 or 0}):Play()
-					if #Dropdown.Options > MaxElements then
-						TweenService:Create(DropdownFrame,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{Size = Dropdown.Toggled and UDim2.new(1, 0, 0, 38 + (MaxElements * 28)) or UDim2.new(1, 0, 0, 38)}):Play()
-					else
-						TweenService:Create(DropdownFrame,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{Size = Dropdown.Toggled and UDim2.new(1, 0, 0, DropdownList.AbsoluteContentSize.Y + 38) or UDim2.new(1, 0, 0, 38)}):Play()
+					
+					-- Reset search box saat dropdown dibuka
+					if DropdownConfig.SearchEnabled and SearchBox then
+						SearchBox.Text = ""
 					end
+					
+					-- Hitung ukuran yang tepat
+					local baseHeight = 38
+					local searchHeight = DropdownConfig.SearchEnabled and 52 or 0
+					local optionsHeight = math.min(DropdownList.AbsoluteContentSize.Y, MaxElements * 28)
+					local totalHeight = baseHeight + searchHeight + optionsHeight + 10
+					
+					TweenService:Create(DropdownFrame,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{
+						Size = Dropdown.Toggled and UDim2.new(1, 0, 0, totalHeight) or UDim2.new(1, 0, 0, 38)
+					}):Play()
 				end)
 
 				Dropdown:Refresh(Dropdown.Options, false)
@@ -1823,63 +1936,95 @@ function NexusUI:ToggleUi()
 	Nexus.Enabled = not Nexus.Enabled
 end
 
+--==================================================
+-- NEXUS UI TOGGLE BUTTON
+-- ANTI DUPLICATE | TOP CENTER | DRAGGABLE
+--==================================================
+
+-- SERVICES
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
-local player = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
 
--- 1. CREATE THE UI STRUCTURE
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+--==================================================
+-- REMOVE OLD TOGGLE (ANTI DUPLICATE)
+--==================================================
+local oldToggle = playerGui:FindFirstChild("NexusUIToggle")
+if oldToggle then
+    oldToggle:Destroy()
+end
+
+--==================================================
+-- SCREEN GUI
+--==================================================
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "NexusUIToggle"
-screenGui.Parent = player:WaitForChild("PlayerGui")
+screenGui.Parent = playerGui
+screenGui.ResetOnSpawn = false
+screenGui.DisplayOrder = 9999
 
--- 2. CREATE THE IMAGE BUTTON (The main clickable square)
+--==================================================
+-- TOGGLE BUTTON
+--==================================================
 local toggleButton = Instance.new("ImageButton")
-toggleButton.Name = "ToggleButton"
 toggleButton.Parent = screenGui
-toggleButton.BackgroundColor3 = Color3.fromRGB(25, 25, 30) -- Dark background
-toggleButton.Position = UDim2.new(0.5, 0, 1, -70)
--- atau untuk jarak yang lebih sedikit dari bawah:
--- toggleButton.Position = UDim2.new(0.5, 0, 1, -60)
-toggleButton.Size = UDim2.new(0, 50, 0, 50) -- Square size
-toggleButton.AutoButtonColor = false -- Gives you full control over click effects
+toggleButton.Size = UDim2.new(0, 50, 0, 50)
+toggleButton.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+toggleButton.AutoButtonColor = false
 
--- >>> REPLACE THIS WITH YOUR COPIED ID FROM THE TOOLBOX <<<
+-- POSISI ATAS TENGAH (LEBIH KE ATAS)
+toggleButton.AnchorPoint = Vector2.new(0.5, 0)
+toggleButton.Position = UDim2.new(0.5, 0, 0, 5)
+
+-- ICON
 toggleButton.Image = "http://www.roblox.com/asset/?id=82528573041751"
 
--- 3. ADD THE UI CORNER (Rounded edges)
+--==================================================
+-- UI CORNER
+--==================================================
 local uiCorner = Instance.new("UICorner")
-uiCorner.CornerRadius = UDim.new(0.2, 0) -- Adjust for more/less rounding
+uiCorner.CornerRadius = UDim.new(0.25, 0)
 uiCorner.Parent = toggleButton
 
--- 4. ADD THE UI STROKE (Colored outline)
+--==================================================
+-- UI STROKE
+--==================================================
 local uiStroke = Instance.new("UIStroke")
 uiStroke.Parent = toggleButton
-uiStroke.Color = Color3.fromRGB(100, 70, 255) -- Purple color
+uiStroke.Color = Color3.fromRGB(100, 70, 255)
 uiStroke.Thickness = 2
 uiStroke.Transparency = 0.3
 
--- 5. ADD FUNCTIONALITY (Toggle UI and Rotate)
+--==================================================
+-- TOGGLE NEXUS UI
+--==================================================
 local isUIOpen = true
 
 toggleButton.MouseButton1Click:Connect(function()
     if NexusUI and NexusUI.ToggleUi then
         NexusUI:ToggleUi()
         isUIOpen = not isUIOpen
-        
-        -- Simple rotation animation
-        local targetRotation = isUIOpen and 0 or 180
-        TweenService:Create(toggleButton, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
-            Rotation = targetRotation
-        }):Play()
+
+        TweenService:Create(
+            toggleButton,
+            TweenInfo.new(0.25, Enum.EasingStyle.Quad),
+            { Rotation = isUIOpen and 0 or 180 }
+        ):Play()
     end
 end)
 
--- 6. ADD HOVER EFFECTS (Optional but nice)
+--==================================================
+-- HOVER EFFECT (PC SAFE)
+--==================================================
 toggleButton.MouseEnter:Connect(function()
     TweenService:Create(toggleButton, TweenInfo.new(0.2), {
         BackgroundColor3 = Color3.fromRGB(35, 35, 40),
         Size = UDim2.new(0, 52, 0, 52)
     }):Play()
+
     TweenService:Create(uiStroke, TweenInfo.new(0.2), {
         Transparency = 0
     }):Play()
@@ -1890,9 +2035,58 @@ toggleButton.MouseLeave:Connect(function()
         BackgroundColor3 = Color3.fromRGB(25, 25, 30),
         Size = UDim2.new(0, 50, 0, 50)
     }):Play()
+
     TweenService:Create(uiStroke, TweenInfo.new(0.2), {
         Transparency = 0.3
     }):Play()
 end)
+
+--==================================================
+-- DRAGGABLE (MOBILE + PC)
+--==================================================
+local dragging = false
+local dragStart
+local startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    toggleButton.Position = UDim2.new(
+        startPos.X.Scale,
+        startPos.X.Offset + delta.X,
+        startPos.Y.Scale,
+        startPos.Y.Offset + delta.Y
+    )
+end
+
+toggleButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+    or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = toggleButton.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+toggleButton.InputChanged:Connect(function(input)
+    if dragging and (
+        input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch
+    ) then
+        update(input)
+    end
+end)
+
+--==================================================
+-- SAFETY
+--==================================================
+if not NexusUI then
+    warn("NexusUI belum diload, toggle hanya visual.")
+end
 
 return NexusUI
