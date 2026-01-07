@@ -1190,11 +1190,7 @@ function NexusUI:MakeWindow(WindowConfig)
 				end
 				return Slider
 			end  
-			-- ============================================
--- COMPLETE DROPDOWN WITH OPTIMIZED SEARCH (QPA)
--- ============================================
-
-function ElementFunction:AddDropdown(DropdownConfig)
+		function ElementFunction:AddDropdown(DropdownConfig)
     DropdownConfig = DropdownConfig or {}
     DropdownConfig.Name = DropdownConfig.Name or "Dropdown"
     DropdownConfig.Options = DropdownConfig.Options or {}
@@ -1202,638 +1198,210 @@ function ElementFunction:AddDropdown(DropdownConfig)
     DropdownConfig.Callback = DropdownConfig.Callback or function() end
     DropdownConfig.Flag = DropdownConfig.Flag or nil
     DropdownConfig.Save = DropdownConfig.Save or false
-    DropdownConfig.SearchEnabled = DropdownConfig.SearchEnabled or (#DropdownConfig.Options > 8)
+    DropdownConfig.SearchEnabled = DropdownConfig.SearchEnabled or true
+    DropdownConfig.MaxVisible = DropdownConfig.MaxVisible or 5
 
-    local Dropdown = {
-        Value = DropdownConfig.Default,
-        Options = DropdownConfig.Options,
-        Buttons = {},
-        Toggled = false,
-        Type = "Dropdown",
-        Save = DropdownConfig.Save,
-        SearchText = ""
-    }
+    local Dropdown = {Value = DropdownConfig.Default, Options = DropdownConfig.Options, Buttons = {}, Toggled = false, Type = "Dropdown", Save = DropdownConfig.Save}
+    local Holding = false
 
-    if not table.find(Dropdown.Options, Dropdown.Value) then
-        Dropdown.Value = "..."
-    end
+    -- Create dropdown container with left-side positioning
+    local DropdownContainer = AddThemeObject(SetProps(SetChildren(MakeElement("ScrollFrame", Color3.fromRGB(40, 40, 40), 4), {
+        MakeElement("List")
+    }), {
+        Parent = ItemParent,
+        Position = UDim2.new(0, 0, 0, 38),
+        Size = UDim2.new(0, 250, 1, -38), -- Fixed width for left-side positioning
+        ClipsDescendants = true,
+        Visible = false,
+        Name = "DropdownContainer"
+    }), "Divider")
 
-    -- ============================================
-    -- MAIN DROPDOWN BUTTON
-    -- ============================================
-    local DropdownMain = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 6), {
+    -- Search textbox
+    local SearchBox = AddThemeObject(Create("TextBox", {
+        Size = UDim2.new(1, -12, 0, 28),
+        Position = UDim2.new(0, 6, 0, 6),
+        BackgroundTransparency = 0.9,
+        Text = "",
+        PlaceholderText = "Search options...",
+        PlaceholderColor3 = Color3.fromRGB(150, 150, 150),
+        TextColor3 = Color3.fromRGB(240, 240, 240),
+        TextSize = 14,
+        Font = Enum.Font.Gotham,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ClearTextOnFocus = false
+    }), "Second")
+
+    -- Dropdown frame with search box
+    local DropdownFrame = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 6), {
         Size = UDim2.new(1, 0, 0, 38),
         Parent = ItemParent,
         ClipsDescendants = true
     }), {
-        SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(60, 60, 70), 0, 6), {
-            Size = UDim2.new(1, 0, 1, 0),
-            BackgroundTransparency = 1,
-            Name = "HoverBg"
-        }), {}),
-        
-        AddThemeObject(SetProps(MakeElement("Label", DropdownConfig.Name, 14), {
-            Size = UDim2.new(0.6, -12, 1, 0),
+        AddThemeObject(SetProps(MakeElement("Label", DropdownConfig.Name, 15), {
+            Size = UDim2.new(1, -12, 1, 0),
             Position = UDim2.new(0, 12, 0, 0),
-            Font = Enum.Font.GothamSemibold,
-            TextXAlignment = Enum.TextXAlignment.Left,
-            Name = "Title"
+            Font = Enum.Font.GothamBold,
+            Name = "Content"
         }), "Text"),
-        
-        AddThemeObject(SetProps(MakeElement("Label", Dropdown.Value, 13), {
-            Size = UDim2.new(0.4, -30, 1, 0),
-            Position = UDim2.new(0.6, 0, 0, 0),
-            Font = Enum.Font.Gotham,
-            TextXAlignment = Enum.TextXAlignment.Right,
-            TextTruncate = Enum.TextTruncate.AtEnd,
-            Name = "SelectedValue",
-            TextColor3 = Color3.fromRGB(180, 180, 185)
-        }), "TextDark"),
-        
         AddThemeObject(SetProps(MakeElement("Image", "rbxassetid://7072706796"), {
-            Size = UDim2.new(0, 16, 0, 16),
-            Position = UDim2.new(1, -25, 0.5, 0),
+            Size = UDim2.new(0, 20, 0, 20),
             AnchorPoint = Vector2.new(0, 0.5),
-            ImageColor3 = Color3.fromRGB(200, 200, 205),
-            Rotation = 0,
-            Name = "Chevron"
+            Position = UDim2.new(1, -30, 0.5, 0),
+            ImageColor3 = Color3.fromRGB(240, 240, 240),
+            Name = "Ico"
         }), "TextDark"),
-        
-        SetProps(MakeElement("Button"), {
-            Size = UDim2.new(1, 0, 1, 0),
-            BackgroundTransparency = 1,
-            Name = "ClickArea"
-        }),
-        
-        SetProps(SetChildren(MakeElement("TFrame", Color3.fromRGB(70, 0, 255)), {
-            Size = UDim2.new(0, 3, 0.6, 0),
-            Position = UDim2.new(0, 0, 0.2, 0),
-            BackgroundTransparency = 0,
-            Name = "AccentLine"
-        }), {
-            AddThemeObject(MakeElement("Corner", 0, 4), "Main")
-        })
+        AddThemeObject(SetProps(MakeElement("Label", "Selected", 13), {
+            Size = UDim2.new(1, -40, 1, 0),
+            Font = Enum.Font.Gotham,
+            Name = "Selected",
+            TextXAlignment = Enum.TextXAlignment.Right
+        }), "TextDark"),
+        AddThemeObject(SetProps(MakeElement("Frame"), {
+            Size = UDim2.new(1, 0, 0, 1),
+            Position = UDim2.new(0, 0, 1, -1),
+            Name = "Line",
+            Visible = false
+        }), "Stroke"), 
+        SearchBox,
+        MakeElement("Corner")
     }), "Second")
 
-    -- ============================================
-    -- POPUP PANEL
-    -- ============================================
-    local DropdownPopup = SetChildren(SetProps(MakeElement("TFrame"), {
-        Size = UDim2.new(0, 200, 0, 0),
-        Position = UDim2.new(1, 10, 0, 0),
-        AnchorPoint = Vector2.new(0, 0),
-        BackgroundTransparency = 1,
+    -- Options container
+    local OptionsFrame = AddThemeObject(SetProps(MakeElement("RoundFrame", Color3.fromRGB(30, 30, 35), 0, 6), {
+        Size = UDim2.new(1, 0, 0, DropdownConfig.MaxVisible * 28),
+        Position = UDim2.new(0, 0, 0, 38),
+        Parent = DropdownContainer,
+        ClipsDescendants = true,
         Visible = false,
-        Parent = DropdownMain,
-        ZIndex = 100,
-        Name = "Popup"
-    }), {
-        SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(25, 25, 30), 0, 8), {
-            Size = UDim2.new(1, 0, 0, 0),
-            BackgroundTransparency = 0,
-            ClipsDescendants = true
-        }), {
-            AddThemeObject(MakeElement("Stroke", Color3.fromRGB(70, 0, 255), 1), "Stroke"),
-            MakeElement("Corner", 0, 8),
-            
-            SetChildren(SetProps(MakeElement("TFrame"), {
-                Size = UDim2.new(1, 0, 0, 40),
-                BackgroundTransparency = 1,
-                Name = "Header"
-            }), {
-                AddThemeObject(SetProps(MakeElement("Label", "Select Option", 15), {
-                    Size = UDim2.new(1, -20, 1, 0),
-                    Position = UDim2.new(0, 12, 0, 0),
-                    Font = Enum.Font.GothamBold,
-                    TextXAlignment = Enum.TextXAlignment.Left
-                }), "Text"),
-                
-                SetProps(MakeElement("ImageButton", "rbxassetid://7072725342"), {
-                    Size = UDim2.new(0, 20, 0, 20),
-                    Position = UDim2.new(1, -25, 0.5, 0),
-                    AnchorPoint = Vector2.new(0, 0.5),
-                    BackgroundTransparency = 1,
-                    ImageColor3 = Color3.fromRGB(180, 180, 185),
-                    Name = "CloseBtn"
-                })
-            }),
-            
-            DropdownConfig.SearchEnabled and SetChildren(SetProps(MakeElement("TFrame"), {
-                Size = UDim2.new(1, 0, 0, 40),
-                Position = UDim2.new(0, 0, 0, 40),
-                BackgroundTransparency = 1,
-                Visible = DropdownConfig.SearchEnabled,
-                Name = "SearchContainer"
-            }), {
-                AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(40, 40, 45), 0, 6), {
-                    Size = UDim2.new(1, -20, 0, 32),
-                    Position = UDim2.new(0, 10, 0.5, 0),
-                    AnchorPoint = Vector2.new(0, 0.5),
-                    BackgroundTransparency = 0
-                }), {
-                    MakeElement("Corner", 0, 6),
-                    AddThemeObject(MakeElement("Stroke", Color3.fromRGB(60, 60, 70), 1), "Stroke"),
-                    
-                    AddThemeObject(SetProps(MakeElement("Image", "rbxassetid://3926307971"), {
-                        Size = UDim2.new(0, 18, 0, 18),
-                        Position = UDim2.new(0, 8, 0.5, 0),
-                        AnchorPoint = Vector2.new(0, 0.5),
-                        ImageRectOffset = Vector2.new(964, 324),
-                        ImageRectSize = Vector2.new(36, 36),
-                        ImageColor3 = Color3.fromRGB(150, 150, 155)
-                    }), "TextDark"),
-                    
-                    AddThemeObject(SetProps(Create("TextBox", {
-                        Size = UDim2.new(1, -35, 1, 0),
-                        Position = UDim2.new(0, 35, 0, 0),
-                        BackgroundTransparency = 1,
-                        Text = "",
-                        PlaceholderText = "Search options...",
-                        PlaceholderColor3 = Color3.fromRGB(120, 120, 125),
-                        TextColor3 = Color3.fromRGB(240, 240, 240),
-                        TextSize = 13,
-                        Font = Enum.Font.Gotham,
-                        TextXAlignment = Enum.TextXAlignment.Left,
-                        ClearTextOnFocus = false,
-                        Name = "SearchBox"
-                    }), "Text"), "Text"),
-                    
-                    SetProps(MakeElement("ImageButton", "rbxassetid://7072725342"), {
-                        Size = UDim2.new(0, 14, 0, 14),
-                        Position = UDim2.new(1, -10, 0.5, 0),
-                        AnchorPoint = Vector2.new(0, 0.5),
-                        BackgroundTransparency = 1,
-                        ImageTransparency = 1,
-                        ImageColor3 = Color3.fromRGB(150, 150, 155),
-                        Visible = false,
-                        Name = "ClearSearch"
-                    })
-                }), "Second")
-            }) or nil,
-            
-            SetChildren(SetProps(AddThemeObject(MakeElement("ScrollFrame", Color3.fromRGB(70, 0, 255), 3), "Divider"), {
-                Size = UDim2.new(1, 0, 1, DropdownConfig.SearchEnabled and -80 or -40),
-                Position = UDim2.new(0, 0, 0, DropdownConfig.SearchEnabled and 80 or 40),
-                BackgroundTransparency = 1,
-                ScrollBarImageColor3 = Color3.fromRGB(70, 0, 255),
-                Name = "OptionsScroller"
-            }), {
-                MakeElement("List", 0, 2),
-                MakeElement("Padding", 5, 5, 5, 5)
-            })
-        })
-    })
+        Name = "OptionsFrame"
+    }), "Second")
 
-    local OptionsContainer = DropdownPopup:FindFirstChild("RoundFrame").OptionsScroller
-    local SearchBox = DropdownConfig.SearchEnabled and DropdownPopup:FindFirstChild("RoundFrame").SearchContainer.SearchBox or nil
-    local ClearSearch = DropdownConfig.SearchEnabled and DropdownPopup:FindFirstChild("RoundFrame").SearchContainer.ClearSearch or nil
-
-    -- ============================================
-    -- OPTIMIZED SEARCH FUNCTION (QPA - Quick Partial-Access)
-    -- ============================================
-    local function FilterOptions(searchText)
-        Dropdown.SearchText = string.lower(searchText or "")
-        
-        -- Toggle clear button
-        if ClearSearch then
-            ClearSearch.Visible = #searchText > 0
-            ClearSearch.ImageTransparency = #searchText > 0 and 0 or 1
-        end
-        
-        -- Early exit for empty search - show all in original order
-        if #Dropdown.SearchText == 0 then
-            local layoutOrder = 0
-            for _, option in ipairs(Dropdown.Options) do
-                local btn = Dropdown.Buttons[option]
-                if btn then
-                    btn.Visible = true
-                    btn.LayoutOrder = layoutOrder
-                    layoutOrder = layoutOrder + 1
-                    btn.TextLabel.Text = option
-                end
-            end
-            
-            -- Update popup height
-            if Dropdown.Toggled then
-                local visibleCount = #Dropdown.Options
-                local maxHeight = math.min(visibleCount * 32 + (DropdownConfig.SearchEnabled and 80 or 40), 300)
-                local popupHeight = math.max(maxHeight, 100)
-                TweenService:Create(DropdownPopup.RoundFrame, TweenInfo.new(0.2), {
-                    Size = UDim2.new(1, 0, 0, popupHeight)
-                }):Play()
-            end
-            return
-        end
-        
-        -- QPA: Quick Partial-Access sorting algorithm
-        local sortedOptions = {}
-        local exactMatches = {}
-        local partialMatches = {} -- {option, startPos, lengthDiff}
-        
-        -- Categorize all options
-        for _, option in ipairs(Dropdown.Options) do
-            local optionLower = string.lower(option)
-            
-            if optionLower == Dropdown.SearchText then
-                -- Exact match - highest priority
-                table.insert(exactMatches, option)
-            elseif string.find(optionLower, Dropdown.SearchText, 1, true) then
-                -- Partial match - score by match position and length similarity
-                local startPos = string.find(optionLower, Dropdown.SearchText, 1, true)
-                table.insert(partialMatches, {
-                    option = option,
-                    startPos = startPos,
-                    lengthDiff = math.abs(#option - #searchText),
-                    score = startPos * 0.1 + math.min(#option, 50) * 0.01 -- Lower score = better
-                })
-            end
-        end
-        
-        -- Sort partial matches by relevance
-        table.sort(partialMatches, function(a, b)
-            -- First by match position (earlier is better)
-            if a.startPos ~= b.startPos then
-                return a.startPos < b.startPos
-            end
-            -- Then by length similarity
-            return a.lengthDiff < b.lengthDiff
-        end)
-        
-        -- Build final sorted list
-        for _, exact in ipairs(exactMatches) do
-            table.insert(sortedOptions, exact)
-        end
-        for _, partial in ipairs(partialMatches) do
-            table.insert(sortedOptions, partial.option)
-        end
-        
-        -- Update UI with new order
-        local layoutOrder = 0
-        for _, option in ipairs(sortedOptions) do
-            local btn = Dropdown.Buttons[option]
-            if btn then
-                btn.Visible = true
-                btn.LayoutOrder = layoutOrder
-                layoutOrder = layoutOrder + 1
-                
-                -- Highlight matching text
-                local optionLower = string.lower(option)
-                local startPos, endPos = string.find(optionLower, Dropdown.SearchText, 1, true)
-                if startPos then
-                    local before = string.sub(option, 1, startPos - 1)
-                    local match = string.sub(option, startPos, endPos)
-                    local after = string.sub(option, endPos + 1)
-                    btn.TextLabel.Text = before .. "<b><font color='rgb(100, 150, 255)'>" .. match .. "</font></b>" .. after
-                end
-            end
-        end
-        
-        -- Hide non-matching options
-        for option, btn in pairs(Dropdown.Buttons) do
-            if not table.find(sortedOptions, option) then
-                btn.Visible = false
-            end
-        end
-        
-        -- Update popup height
-        local visibleCount = #sortedOptions
-        if Dropdown.Toggled then
-            local maxHeight = math.min(visibleCount * 32 + (DropdownConfig.SearchEnabled and 80 or 40), 300)
-            local popupHeight = math.max(maxHeight, 100)
-            TweenService:Create(DropdownPopup.RoundFrame, TweenInfo.new(0.2), {
-                Size = UDim2.new(1, 0, 0, popupHeight)
-            }):Play()
-        end
-    end
-
-    -- ============================================
-    -- OPTION CREATION FUNCTION
-    -- ============================================
-    local function CreateOptionButton(optionText)
-        local OptionBtn = SetChildren(SetProps(MakeElement("Button"), {
-            Size = UDim2.new(1, -10, 0, 30),
-            BackgroundTransparency = 1,
-            Parent = OptionsContainer,
-            Name = optionText
-        }), {
-            SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(35, 35, 40), 0, 5), {
-                Size = UDim2.new(1, 0, 1, 0),
-                BackgroundTransparency = 0.9,
-                Name = "Bg"
-            }), {
-                MakeElement("Corner", 0, 5),
-                AddThemeObject(MakeElement("Stroke", Color3.fromRGB(50, 50, 55), 1), "Stroke")
-            }),
-            
-            AddThemeObject(SetProps(MakeElement("Label", optionText, 13), {
-                Size = UDim2.new(1, -10, 1, 0),
-                Position = UDim2.new(0, 10, 0, 0),
-                TextXAlignment = Enum.TextXAlignment.Left,
-                Font = Enum.Font.Gotham,
-                TextColor3 = Color3.fromRGB(200, 200, 205),
-                RichText = true,
-                Name = "TextLabel"
-            }), "Text"),
-            
-            SetProps(SetChildren(MakeElement("TFrame", Color3.fromRGB(70, 0, 255)), {
-                Size = UDim2.new(0, 3, 0.6, 0),
-                Position = UDim2.new(0, 0, 0.2, 0),
-                BackgroundTransparency = 1,
-                Name = "SelectionIndicator"
-            }), {
-                MakeElement("Corner", 0, 4)
-            })
-        })
-
-        -- Hover effects
-        OptionBtn.MouseEnter:Connect(function()
-            TweenService:Create(OptionBtn.Bg, TweenInfo.new(0.2), {
-                BackgroundTransparency = 0.7
-            }):Play()
-            TweenService:Create(OptionBtn.TextLabel, TweenInfo.new(0.2), {
-                TextColor3 = Color3.fromRGB(240, 240, 240)
-            }):Play()
-        end)
-
-        OptionBtn.MouseLeave:Connect(function()
-            if OptionBtn.TextLabel.Text ~= Dropdown.Value then
-                TweenService:Create(OptionBtn.Bg, TweenInfo.new(0.2), {
-                    BackgroundTransparency = 0.9
-                }):Play()
-                TweenService:Create(OptionBtn.TextLabel, TweenInfo.new(0.2), {
-                    TextColor3 = Color3.fromRGB(200, 200, 205)
-                }):Play()
-            end
-        end)
-
-        -- Click event
-        OptionBtn.MouseButton1Click:Connect(function()
-            Dropdown:Set(optionText)
-            SaveCfg(game.GameId)
-            TogglePopup(false)
-        end)
-
-        Dropdown.Buttons[optionText] = OptionBtn
-        return OptionBtn
-    end
-
-    -- ============================================
-    -- ANIMATION & TOGGLE FUNCTIONS
-    -- ============================================
-    local function TogglePopup(show)
-        if show then
-            -- Close other dropdowns
-            for _, existingPopup in ipairs(DropdownMain.Parent.Parent:GetDescendants()) do
-                if existingPopup.Name == "Popup" and existingPopup ~= DropdownPopup then
-                    existingPopup.Visible = false
-                    local otherChevron = existingPopup.Parent:FindFirstChild("Chevron")
-                    if otherChevron then
-                        otherChevron.Rotation = 0
-                    end
-                end
-            end
-            
-            DropdownPopup.Visible = true
-            Dropdown.Toggled = true
-            
-            -- Apply current search filter
-            FilterOptions(SearchBox and SearchBox.Text or "")
-            
-            -- Calculate height
-            local visibleButtons = 0
-            for _, btn in pairs(Dropdown.Buttons) do
-                if btn.Visible then visibleButtons = visibleButtons + 1 end
-            end
-            
-            local maxHeight = math.min(visibleButtons * 32 + (DropdownConfig.SearchEnabled and 80 or 40), 300)
-            local popupHeight = math.max(maxHeight, 100)
-            
-            -- Animate open
-            DropdownPopup.RoundFrame.Size = UDim2.new(1, 0, 0, 0)
-            TweenService:Create(DropdownPopup.RoundFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {
-                Size = UDim2.new(1, 0, 0, popupHeight)
-            }):Play()
-            
-            TweenService:Create(DropdownMain.Chevron, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {
-                Rotation = 180,
-                ImageColor3 = Color3.fromRGB(70, 0, 255)
-            }):Play()
-            
-            TweenService:Create(DropdownMain.AccentLine, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                BackgroundTransparency = 0
-            }):Play()
-            
-        else
-            Dropdown.Toggled = false
-            
-            -- Animate close
-            TweenService:Create(DropdownPopup.RoundFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {
-                Size = UDim2.new(1, 0, 0, 0)
-            }):Play()
-            
-            TweenService:Create(DropdownMain.Chevron, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {
-                Rotation = 0,
-                ImageColor3 = Color3.fromRGB(200, 200, 205)
-            }):Play()
-            
-            TweenService:Create(DropdownMain.AccentLine, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                BackgroundTransparency = 1
-            }):Play()
-            
-            wait(0.2)
-            DropdownPopup.Visible = false
-            
-            -- Clear search when closing
-            if SearchBox then
-                SearchBox.Text = ""
-            end
-        end
-    end
-
-    -- ============================================
-    -- DROPDOWN METHODS
-    -- ============================================
-    function Dropdown:Refresh(newOptions, deleteOld)
-        if deleteOld then
-            for _, btn in pairs(Dropdown.Buttons) do
-                btn:Destroy()
-            end
-            Dropdown.Buttons = {}
-            Dropdown.Options = {}
-        end
-        
-        Dropdown.Options = newOptions or Dropdown.Options
-        
+    local function AddOptions(Options, FilterText)
         -- Clear existing buttons
-        for _, btn in pairs(Dropdown.Buttons) do
-            btn:Destroy()
+        for _, v in pairs(Dropdown.Buttons) do
+            v:Destroy()
         end
-        Dropdown.Buttons = {}
-        
-        -- Create new buttons
-        for _, option in ipairs(Dropdown.Options) do
-            CreateOptionButton(option)
-        end
-        
-        -- Update current value
-        if not table.find(Dropdown.Options, Dropdown.Value) then
-            Dropdown.Value = "..."
-            DropdownMain.SelectedValue.Text = Dropdown.Value
-        end
-        
-        -- Apply current search filter if open
-        if Dropdown.Toggled then
-            FilterOptions(SearchBox and SearchBox.Text or "")
-        end
-    end
+        table.clear(Dropdown.Buttons)
 
-    function Dropdown:Set(option)
-        if not table.find(Dropdown.Options, option) then
-            Dropdown.Value = "..."
-            DropdownMain.SelectedValue.Text = Dropdown.Value
-            
-            -- Reset all indicators
-            for _, btn in pairs(Dropdown.Buttons) do
-                TweenService:Create(btn.SelectionIndicator, TweenInfo.new(0.2), {
-                    BackgroundTransparency = 1
-                }):Play()
-                TweenService:Create(btn.TextLabel, TweenInfo.new(0.2), {
-                    TextColor3 = Color3.fromRGB(200, 200, 205)
-                }):Play()
-                TweenService:Create(btn.Bg, TweenInfo.new(0.2), {
-                    BackgroundTransparency = 0.9
-                }):Play()
+        -- Filter and sort options
+        local filteredOptions = {}
+        if FilterText and FilterText ~= "" then
+            local lowerFilter = string.lower(FilterText)
+            for _, option in pairs(Options) do
+                if string.find(string.lower(option), lowerFilter, 1, true) then
+                    table.insert(filteredOptions, option)
+                end
             end
-            return
+        else
+            filteredOptions = Options
         end
 
-        Dropdown.Value = option
-        DropdownMain.SelectedValue.Text = option
-        
-        -- Update all buttons
-        for optName, btn in pairs(Dropdown.Buttons) do
-            if optName == option then
-                -- Selected button
-                TweenService:Create(btn.SelectionIndicator, TweenInfo.new(0.2), {
-                    BackgroundTransparency = 0
-                }):Play()
-                TweenService:Create(btn.TextLabel, TweenInfo.new(0.2), {
-                    TextColor3 = Color3.fromRGB(240, 240, 240)
-                }):Play()
-                TweenService:Create(btn.Bg, TweenInfo.new(0.2), {
-                    BackgroundTransparency = 0.8
-                }):Play()
-            else
-                -- Unselected buttons
-                TweenService:Create(btn.SelectionIndicator, TweenInfo.new(0.2), {
-                    BackgroundTransparency = 1
-                }):Play()
-                TweenService:Create(btn.TextLabel, TweenInfo.new(0.2), {
-                    TextColor3 = Color3.fromRGB(200, 200, 205)
-                }):Play()
-                TweenService:Create(btn.Bg, TweenInfo.new(0.2), {
-                    BackgroundTransparency = 0.9
-                }):Play()
-            end
+        -- Add filtered options
+        for _, Option in pairs(filteredOptions) do
+            local OptionBtn = AddThemeObject(SetProps(SetChildren(MakeElement("Button", Color3.fromRGB(40, 40, 40)), {
+                MakeElement("Corner", 0, 6),
+                AddThemeObject(SetProps(MakeElement("Label", Option, 13, 0.4), {
+                    Position = UDim2.new(0, 8, 0, 0),
+                    Size = UDim2.new(1, -8, 1, 0),
+                    Name = "Title"
+                }), "Text")
+            }), {
+                Parent = OptionsFrame,
+                Size = UDim2.new(1, 0, 0, 28),
+                BackgroundTransparency = 1,
+                ClipsDescendants = true
+            }), "Divider")
+
+            AddConnection(OptionBtn.MouseButton1Click, function()
+                Dropdown:Set(Option)
+                SaveCfg(game.GameId)
+            end)
+
+            Dropdown.Buttons[Option] = OptionBtn
         end
-        
-        DropdownConfig.Callback(option)
+
+        -- Update dropdown height based on visible options
+        local visibleCount = math.min(#filteredOptions, DropdownConfig.MaxVisible)
+        TweenService:Create(DropdownFrame, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = UDim2.new(1, 0, 0, 38 + (visibleCount * 28))
+        }):Play()
+        OptionsFrame.Visible = Dropdown.Toggled
     end
-
-    -- ============================================
-    -- EVENT CONNECTIONS
-    -- ============================================
-    DropdownMain.ClickArea.MouseButton1Click:Connect(function()
-        TogglePopup(not Dropdown.Toggled)
-    end)
-
-    DropdownPopup.RoundFrame.Header.CloseBtn.MouseButton1Click:Connect(function()
-        TogglePopup(false)
-    end)
 
     -- Search functionality
-    if SearchBox then
-        SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
-            FilterOptions(SearchBox.Text)
-        end)
-        
-        ClearSearch.MouseButton1Click:Connect(function()
-            SearchBox.Text = ""
-            ClearSearch.Visible = false
-            ClearSearch.ImageTransparency = 1
-        end)
-        
-        SearchBox.Focused:Connect(function()
-            TweenService:Create(SearchBox.Parent, TweenInfo.new(0.2), {
-                BackgroundColor3 = Color3.fromRGB(45, 45, 50)
-            }):Play()
-        end)
-        
-        SearchBox.FocusLost:Connect(function()
-            TweenService:Create(SearchBox.Parent, TweenInfo.new(0.2), {
-                BackgroundColor3 = Color3.fromRGB(40, 40, 45)
-            }):Play()
-        end)
+    local function FilterOptions(SearchText)
+        AddOptions(Dropdown.Options, SearchText)
     end
 
-    -- Close when clicking outside
-    local function CloseOnOutsideClick(input)
-        if Dropdown.Toggled and input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local popupRect = DropdownPopup.AbsolutePosition
-            local popupSize = DropdownPopup.AbsoluteSize
-            local mousePos = input.Position
-            
-            local isInsidePopup = 
-                mousePos.X >= popupRect.X and 
-                mousePos.X <= popupRect.X + popupSize.X and
-                mousePos.Y >= popupRect.Y and 
-                mousePos.Y <= popupRect.Y + popupSize.Y
-            
-            local isInsideMain = 
-                mousePos.X >= DropdownMain.AbsolutePosition.X and 
-                mousePos.X <= DropdownMain.AbsolutePosition.X + DropdownMain.AbsoluteSize.X and
-                mousePos.Y >= DropdownMain.AbsolutePosition.Y and 
-                mousePos.Y <= DropdownMain.AbsolutePosition.Y + DropdownMain.AbsoluteSize.Y
-            
-            if not isInsidePopup and not isInsideMain then
-                TogglePopup(false)
+    if DropdownConfig.SearchEnabled then
+        AddConnection(SearchBox.Changed, function(property)
+            if property == "Text" then
+                FilterOptions(SearchBox.Text)
             end
-        end
+        end)
     end
 
-    AddConnection(UserInputService.InputBegan, CloseOnOutsideClick)
-
-    -- Hover effects
-    DropdownMain.ClickArea.MouseEnter:Connect(function()
-        TweenService:Create(DropdownMain.HoverBg, TweenInfo.new(0.2), {
-            BackgroundTransparency = 0.8
-        }):Play()
+    AddConnection(DropdownFrame.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
+        DropdownContainer.CanvasSize = UDim2.new(0, 0, 0, DropdownFrame.UIListLayout.AbsoluteContentSize.Y + 30)
     end)
 
-    DropdownMain.ClickArea.MouseLeave:Connect(function()
-        TweenService:Create(DropdownMain.HoverBg, TweenInfo.new(0.2), {
-            BackgroundTransparency = 1
-        }):Play()
+    AddConnection(DropdownContainer.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
+        OptionsFrame.Size = UDim2.new(1, 0, 0, math.min(DropdownContainer.UIListLayout.AbsoluteContentSize.Y, DropdownConfig.MaxVisible * 28))
     end)
 
-    -- ============================================
-    -- INITIALIZATION
-    -- ============================================
+    AddConnection(DropdownFrame.MouseButton1Click, function()
+        Dropdown.Toggled = not Dropdown.Toggled
+        DropdownFrame.Line.Visible = Dropdown.Toggled
+        TweenService:Create(DropdownFrame.Ico,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{Rotation = Dropdown.Toggled and 180 or 0}):Play()
+        DropdownContainer.Visible = Dropdown.Toggled
+        OptionsFrame.Visible = Dropdown.Toggled
+        
+        if Dropdown.Toggled then
+            -- Refresh options when opening
+            FilterOptions(SearchBox.Text)
+        end
+    end)
+
+    function Dropdown:Refresh(Options, Delete)
+        if Delete then
+            for _,v in pairs(Dropdown.Buttons) do
+                v:Destroy()
+            end    
+            table.clear(Dropdown.Options)
+            table.clear(Dropdown.Buttons)
+        end
+        Dropdown.Options = Options
+        AddOptions(Dropdown.Options, SearchBox.Text)
+    end  
+
+    function Dropdown:Set(Value)
+        if not table.find(Dropdown.Options, Value) then
+            Dropdown.Value = "..."
+            DropdownFrame.Selected.Text = Dropdown.Value
+            for _, v in pairs(Dropdown.Buttons) do
+                TweenService:Create(v,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{BackgroundTransparency = 1}):Play()
+                TweenService:Create(v.Title,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{TextTransparency = 0.4}):Play()
+            end	
+            return
+        end
+
+        Dropdown.Value = Value
+        DropdownFrame.Selected.Text = Dropdown.Value
+
+        for _, v in pairs(Dropdown.Buttons) do
+            TweenService:Create(v,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{BackgroundTransparency = 1}):Play()
+            TweenService:Create(v.Title,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{TextTransparency = 0.4}):Play()
+        end	
+        TweenService:Create(Dropdown.Buttons[Value],TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{BackgroundTransparency = 0}):Play()
+        TweenService:Create(Dropdown.Buttons[Value].Title,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{TextTransparency = 0}):Play()
+        return DropdownConfig.Callback(Dropdown.Value)
+    end
+
     Dropdown:Refresh(Dropdown.Options, false)
     Dropdown:Set(Dropdown.Value)
-    
-    -- Set ZIndex
-    DropdownPopup.ZIndex = 100
-    for _, child in ipairs(DropdownPopup:GetDescendants()) do
-        if child:IsA("GuiObject") then
-            child.ZIndex = 101
-        end
-    end
-
-    if DropdownConfig.Flag then
+    if DropdownConfig.Flag then				
         NexusUI.Flags[DropdownConfig.Flag] = Dropdown
     end
-    
     return Dropdown
 end
 			function ElementFunction:AddBind(BindConfig)
