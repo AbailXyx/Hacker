@@ -1204,34 +1204,61 @@ function NexusUI:MakeWindow(WindowConfig)
     local Dropdown = {Value = DropdownConfig.Default, Options = DropdownConfig.Options, Buttons = {}, Toggled = false, Type = "Dropdown", Save = DropdownConfig.Save}
     local Holding = false
 
-    -- Create dropdown container with left-side positioning
-    local DropdownContainer = AddThemeObject(SetProps(SetChildren(MakeElement("ScrollFrame", Color3.fromRGB(40, 40, 40), 4), {
+    -- Create dropdown container with your design
+    local DropdownContainer = SetProps(SetChildren(MakeElement("Frame"), {
         MakeElement("List")
     }), {
         Parent = ItemParent,
         Position = UDim2.new(0, 0, 0, 38),
-        Size = UDim2.new(0, 250, 1, -38), -- Fixed width for left-side positioning
-        ClipsDescendants = true,
-        Visible = false,
-        Name = "DropdownContainer"
-    }), "Divider")
+        Size = UDim2.new(0, 174, 1, -38), -- Match your design width
+        BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+        BorderSizePixel = 0,
+        Name = "DropdownContainer",
+        Visible = false
+    })
 
-    -- Search textbox
-    local SearchBox = AddThemeObject(Create("TextBox", {
-        Size = UDim2.new(1, -12, 0, 28),
-        Position = UDim2.new(0, 6, 0, 6),
-        BackgroundTransparency = 0.9,
-        Text = "",
-        PlaceholderText = "Search options...",
-        PlaceholderColor3 = Color3.fromRGB(150, 150, 150),
-        TextColor3 = Color3.fromRGB(240, 240, 240),
-        TextSize = 14,
-        Font = Enum.Font.Gotham,
+    -- UI Corner for your design
+    local UICorner = MakeElement("UICorner", 0, 6)
+    UICorner.Parent = DropdownContainer
+
+    -- UI Stroke for your design
+    local UIStroke = MakeElement("Stroke", Color3.fromRGB(255, 0, 0), 2)
+    UIStroke.Parent = DropdownContainer
+
+    -- Search textbox (your design)
+    local SearchBox = SetProps(Create("TextBox", {
+        Size = UDim2.new(1, -4, 0, 28),
+        Position = UDim2.new(0, 2, 0, 2),
+        BorderSizePixel = 0,
+        BackgroundColor3 = Color3.fromRGB(54, 54, 54),
+        TextSize = 13,
+        TextColor3 = Color3.fromRGB(153, 153, 153),
+        PlaceholderText = "Search Options...",
+        PlaceholderColor3 = Color3.fromRGB(255, 255, 255),
+        Font = Enum.Font.GothamBold,
         TextXAlignment = Enum.TextXAlignment.Left,
         ClearTextOnFocus = false
-    }), "Second")
+    }), {
+        Parent = DropdownContainer,
+        UICorner = MakeElement("UICorner", 0, 6)
+    })
 
-    -- Dropdown frame with search box
+    -- ScrollingFrame for options (your design)
+    local ScrollingFrame = SetProps(SetChildren(MakeElement("ScrollingFrame", Color3.fromRGB(255, 255, 255), 5), {
+        MakeElement("List", 0, 6)
+    }), {
+        Parent = DropdownContainer,
+        BorderSizePixel = 0,
+        BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+        Size = UDim2.new(1, 0, 1, 0),
+        Position = UDim2.new(0, 2, 0, 34),
+        ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0),
+        ScrollBarThickness = 5,
+        BackgroundTransparency = 1,
+        Name = "OptionsScroll"
+    })
+
+    -- Dropdown frame with your design
     local DropdownFrame = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 6), {
         Size = UDim2.new(1, 0, 0, 38),
         Parent = ItemParent,
@@ -1262,75 +1289,64 @@ function NexusUI:MakeWindow(WindowConfig)
             Name = "Line",
             Visible = false
         }), "Stroke"), 
-        SearchBox,
         MakeElement("Corner")
     }), "Second")
 
-    -- Options container
-    local OptionsFrame = AddThemeObject(SetProps(MakeElement("RoundFrame", Color3.fromRGB(30, 30, 35), 0, 6), {
-        Size = UDim2.new(1, 0, 0, DropdownConfig.MaxVisible * 28),
-        Position = UDim2.new(0, 0, 0, 38),
-        Parent = DropdownContainer,
-        ClipsDescendants = true,
-        Visible = false,
-        Name = "OptionsFrame"
-    }), "Second")
+    -- Create option buttons in the scrolling frame
+    local function CreateOptionButton(Option)
+        local OptionBtn = SetProps(SetChildren(MakeElement("Button", Color3.fromRGB(0, 0, 0)), {
+            MakeElement("Corner", 0, 6),
+            AddThemeObject(SetProps(MakeElement("Label", Option, 10, 0.4), {
+                Position = UDim2.new(0, 8, 0, 0),
+                Size = UDim2.new(1, -8, 1, 0),
+                Name = "Title"
+            }), "Text")
+        }), {
+            Parent = ScrollingFrame,
+            Size = UDim2.new(1, 0, 0, 28),
+            BackgroundTransparency = 1,
+            ClipsDescendants = true
+        })
+        
+        AddConnection(OptionBtn.MouseButton1Click, function()
+            Dropdown:Set(Option)
+            SaveCfg(game.GameId)
+        end)
+        
+        return OptionBtn
+    end
 
-    local function AddOptions(Options, FilterText)
+    -- Search functionality
+    local function FilterOptions(SearchText)
         -- Clear existing buttons
         for _, v in pairs(Dropdown.Buttons) do
             v:Destroy()
         end
         table.clear(Dropdown.Buttons)
 
-        -- Filter and sort options
+        -- Filter and create new buttons
         local filteredOptions = {}
-        if FilterText and FilterText ~= "" then
-            local lowerFilter = string.lower(FilterText)
-            for _, option in pairs(Options) do
-                if string.find(string.lower(option), lowerFilter, 1, true) then
+        if SearchText and SearchText ~= "" then
+            local lowerSearch = string.lower(SearchText)
+            for _, option in pairs(Dropdown.Options) do
+                if string.find(string.lower(option), lowerSearch, 1, true) then
                     table.insert(filteredOptions, option)
                 end
             end
         else
-            filteredOptions = Options
+            filteredOptions = Dropdown.Options
         end
 
-        -- Add filtered options
-        for _, Option in pairs(filteredOptions) do
-            local OptionBtn = AddThemeObject(SetProps(SetChildren(MakeElement("Button", Color3.fromRGB(40, 40, 40)), {
-                MakeElement("Corner", 0, 6),
-                AddThemeObject(SetProps(MakeElement("Label", Option, 13, 0.4), {
-                    Position = UDim2.new(0, 8, 0, 0),
-                    Size = UDim2.new(1, -8, 1, 0),
-                    Name = "Title"
-                }), "Text")
-            }), {
-                Parent = OptionsFrame,
-                Size = UDim2.new(1, 0, 0, 28),
-                BackgroundTransparency = 1,
-                ClipsDescendants = true
-            }), "Divider")
-
-            AddConnection(OptionBtn.MouseButton1Click, function()
-                Dropdown:Set(Option)
-                SaveCfg(game.GameId)
-            end)
-
-            Dropdown.Buttons[Option] = OptionBtn
+        for _, option in pairs(filteredOptions) do
+            Dropdown.Buttons[option] = CreateOptionButton(option)
         end
 
-        -- Update dropdown height based on visible options
+        -- Update dropdown height
         local visibleCount = math.min(#filteredOptions, DropdownConfig.MaxVisible)
         TweenService:Create(DropdownFrame, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
             Size = UDim2.new(1, 0, 0, 38 + (visibleCount * 28))
         }):Play()
-        OptionsFrame.Visible = Dropdown.Toggled
-    end
-
-    -- Search functionality
-    local function FilterOptions(SearchText)
-        AddOptions(Dropdown.Options, SearchText)
+        DropdownContainer.Visible = Dropdown.Toggled
     end
 
     if DropdownConfig.SearchEnabled then
@@ -1341,25 +1357,12 @@ function NexusUI:MakeWindow(WindowConfig)
         end)
     end
 
-    AddConnection(DropdownFrame.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
-        DropdownContainer.CanvasSize = UDim2.new(0, 0, 0, DropdownFrame.UIListLayout.AbsoluteContentSize.Y + 30)
-    end)
-
-    AddConnection(DropdownContainer.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
-        OptionsFrame.Size = UDim2.new(1, 0, 0, math.min(DropdownContainer.UIListLayout.AbsoluteContentSize.Y, DropdownConfig.MaxVisible * 28))
-    end)
-
     AddConnection(DropdownFrame.MouseButton1Click, function()
         Dropdown.Toggled = not Dropdown.Toggled
         DropdownFrame.Line.Visible = Dropdown.Toggled
         TweenService:Create(DropdownFrame.Ico,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{Rotation = Dropdown.Toggled and 180 or 0}):Play()
         DropdownContainer.Visible = Dropdown.Toggled
-        OptionsFrame.Visible = Dropdown.Toggled
-        
-        if Dropdown.Toggled then
-            -- Refresh options when opening
-            FilterOptions(SearchBox.Text)
-        end
+        FilterOptions(SearchBox.Text)
     end)
 
     function Dropdown:Refresh(Options, Delete)
@@ -1371,7 +1374,7 @@ function NexusUI:MakeWindow(WindowConfig)
             table.clear(Dropdown.Buttons)
         end
         Dropdown.Options = Options
-        AddOptions(Dropdown.Options, SearchBox.Text)
+        FilterOptions(SearchBox.Text)
     end  
 
     function Dropdown:Set(Value)
