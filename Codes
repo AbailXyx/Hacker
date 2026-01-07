@@ -1190,7 +1190,7 @@ function NexusUI:MakeWindow(WindowConfig)
 				end
 				return Slider
 			end  
-		function ElementFunction:AddDropdown(DropdownConfig)
+			function ElementFunction:AddDropdown(DropdownConfig)
     DropdownConfig = DropdownConfig or {}
     DropdownConfig.Name = DropdownConfig.Name or "Dropdown"
     DropdownConfig.Options = DropdownConfig.Options or {}
@@ -1200,17 +1200,49 @@ function NexusUI:MakeWindow(WindowConfig)
     DropdownConfig.Save = DropdownConfig.Save or false
     DropdownConfig.SearchEnabled = DropdownConfig.SearchEnabled or true
     DropdownConfig.MaxVisible = DropdownConfig.MaxVisible or 5
+    DropdownConfig.ShowASCII = DropdownConfig.ShowASCII or true
 
     local Dropdown = {Value = DropdownConfig.Default, Options = DropdownConfig.Options, Buttons = {}, Toggled = false, Type = "Dropdown", Save = DropdownConfig.Save}
     local Holding = false
 
-    -- Create dropdown container with your design
+    -- Create ASCII art display (hidden by default)
+    local ASCIIContainer = SetProps(SetChildren(MakeElement("TFrame"), {
+        MakeElement("List")
+    }), {
+        Parent = ItemParent,
+        Position = UDim2.new(1, 10, 0, 38),
+        Size = UDim2.new(0, 400, 1, -38),
+        BackgroundTransparency = 1,
+        Visible = false,
+        Name = "ASCIIContainer"
+    })
+
+    -- ASCII art text
+    local ASIIText = SetProps(MakeElement("Label", [[
+ d888b  db    db d888888b      .d888b.      db      db    db  .d8b.  
+88' Y8b 88    88   `88'        VP  `8D      88      88    88 d8' `8b 
+88      88    88    88            odD'      88      88    88 88ooo88 
+88  ooo 88    88    88          .88'        88      88    88 88~~~88 
+88. ~8~ 88b  d88   .88.        j88.         88booo. 88b  d88 88   88    @uniquadev
+ Y888P  ~Y8888P' Y888888P      888888D      Y88888P ~Y8888P' YP   YP  CONVERTER 
+
+designed using localmaze gui creator]], 12), {
+        Parent = ASCIIContainer,
+        Size = UDim2.new(1, 0, 0, 0),
+        Position = UDim2.new(0, 0, 0, 0),
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextYAlignment = Enum.TextYAlignment.Top,
+        AutomaticSize = Enum.AutomaticSize.Y,
+        TextWrapped = true
+    })
+
+    -- Create dropdown container with your design (right-side positioning)
     local DropdownContainer = SetProps(SetChildren(MakeElement("Frame"), {
         MakeElement("List")
     }), {
         Parent = ItemParent,
-        Position = UDim2.new(0, 0, 0, 38),
-        Size = UDim2.new(0, 174, 1, -38), -- Match your design width
+        Position = UDim2.new(1, -174, 0, 38), -- Position on the right side
+        Size = UDim2.new(0, 174, 1, -38),
         BackgroundColor3 = Color3.fromRGB(0, 0, 0),
         BorderSizePixel = 0,
         Name = "DropdownContainer",
@@ -1361,6 +1393,12 @@ function NexusUI:MakeWindow(WindowConfig)
         Dropdown.Toggled = not Dropdown.Toggled
         DropdownFrame.Line.Visible = Dropdown.Toggled
         TweenService:Create(DropdownFrame.Ico,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{Rotation = Dropdown.Toggled and 180 or 0}):Play()
+        
+        -- Show/hide ASCII art
+        if DropdownConfig.ShowASCII then
+            ASCIIContainer.Visible = Dropdown.Toggled
+        end
+        
         DropdownContainer.Visible = Dropdown.Toggled
         FilterOptions(SearchBox.Text)
     end)
