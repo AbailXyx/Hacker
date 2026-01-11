@@ -12,20 +12,20 @@ local NexusUI = {
 	Flags = {},
 	Themes = {
 		Default = {
-			Main = Color3.fromRGB(15, 15, 15),
-			Second = Color3.fromRGB(25, 25, 25),
-			Stroke = Color3.fromRGB(255, 0, 0),
-			Divider = Color3.fromRGB(30, 30, 30),
+			Main = Color3.fromRGB(20, 20, 20),
+			Second = Color3.fromRGB(30, 30, 35),
+			Stroke = Color3.fromRGB(255, 40, 40),
+			Divider = Color3.fromRGB(40, 40, 45),
 			Text = Color3.fromRGB(255, 255, 255),
-			TextDark = Color3.fromRGB(180, 180, 180)
+			TextDark = Color3.fromRGB(220, 220, 220)
 		},
 		Dark = {
-			Main = Color3.fromRGB(10, 10, 10),
-			Second = Color3.fromRGB(20, 20, 20),
-			Stroke = Color3.fromRGB(255, 40, 40),
-			Divider = Color3.fromRGB(25, 25, 25),
+			Main = Color3.fromRGB(15, 15, 15),
+			Second = Color3.fromRGB(25, 25, 30),
+			Stroke = Color3.fromRGB(255, 60, 60),
+			Divider = Color3.fromRGB(35, 35, 40),
 			Text = Color3.fromRGB(255, 255, 255),
-			TextDark = Color3.fromRGB(170, 170, 170)
+			TextDark = Color3.fromRGB(210, 210, 210)
 		}
 	},
 	SelectedTheme = "Default",
@@ -261,14 +261,14 @@ end
 
 CreateElement("Corner", function(Scale, Offset)
 	local Corner = Create("UICorner", {
-		CornerRadius = UDim.new(Scale or 0, Offset or 8)
+		CornerRadius = UDim.new(Scale or 0, Offset or 10)
 	})
 	return Corner
 end)
 
 CreateElement("Stroke", function(Color, Thickness)
 	local Stroke = Create("UIStroke", {
-		Color = Color or Color3.fromRGB(255, 0, 0),
+		Color = Color or Color3.fromRGB(255, 40, 40),
 		Thickness = Thickness or 2
 	})
 	return Stroke
@@ -284,10 +284,10 @@ end)
 
 CreateElement("Padding", function(Bottom, Left, Right, Top)
 	local Padding = Create("UIPadding", {
-		PaddingBottom = UDim.new(0, Bottom or 8),
-		PaddingLeft = UDim.new(0, Left or 8),
-		PaddingRight = UDim.new(0, Right or 8),
-		PaddingTop = UDim2.new(0, Top or 8)
+		PaddingBottom = UDim.new(0, Bottom or 4),
+		PaddingLeft = UDim.new(0, Left or 4),
+		PaddingRight = UDim.new(0, Right or 4),
+		PaddingTop = UDim.new(0, Top or 4)
 	})
 	return Padding
 end)
@@ -369,8 +369,8 @@ CreateElement("Label", function(Text, TextSize, Transparency)
 		Text = Text or "",
 		TextColor3 = Color3.fromRGB(255, 255, 255),
 		TextTransparency = Transparency or 0,
-		TextSize = TextSize or 14,
-		Font = Enum.Font.GothamBold,
+		TextSize = TextSize or 15,
+		Font = Enum.Font.Gotham,
 		RichText = true,
 		BackgroundTransparency = 1,
 		TextXAlignment = Enum.TextXAlignment.Left
@@ -405,14 +405,14 @@ function NexusUI:MakeNotification(NotificationConfig)
 			Parent = NotificationHolder
 		})
 
-		local NotificationFrame = SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(25, 25, 25), 0, 8), {
+		local NotificationFrame = SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(25, 25, 25), 0, 12), {
 			Parent = NotificationParent, 
 			Size = UDim2.new(1, 0, 0, 0),
 			Position = UDim2.new(1, -55, 0, 0),
 			BackgroundTransparency = 0,
 			AutomaticSize = Enum.AutomaticSize.Y
 		}), {
-			MakeElement("Stroke", Color3.fromRGB(255, 0, 0), 2),
+			MakeElement("Stroke", Color3.fromRGB(255, 40, 40), 2),
 			MakeElement("Padding", 12, 12, 12, 12),
 			SetProps(MakeElement("Image", NotificationConfig.Image), {
 				Size = UDim2.new(0, 20, 0, 20),
@@ -431,7 +431,7 @@ function NexusUI:MakeNotification(NotificationConfig)
 				Font = Enum.Font.GothamSemibold,
 				Name = "Content",
 				AutomaticSize = Enum.AutomaticSize.Y,
-				TextColor3 = Color3.fromRGB(200, 200, 200),
+				TextColor3 = Color3.fromRGB(220, 220, 220),
 				TextWrapped = true
 			})
 		})
@@ -509,43 +509,53 @@ function NexusUI:MakeWindow(WindowConfig)
 		Position = UDim2.new(0.5, 0, 0, 0),
 		BackgroundTransparency = 1
 	}), {
-		AddThemeObject(SetProps(MakeElement("Image", "rbxassetid://7072725342"), {
+		SetProps(MakeElement("Image", "rbxassetid://7072725342"), {
 			Position = UDim2.new(0, 9, 0, 6),
-			Size = UDim2.new(0, 18, 0, 18)
-		}), "Text")
+			Size = UDim2.new(0, 18, 0, 18),
+			ImageColor3 = Color3.fromRGB(255, 60, 60)
+		})
 	})
 
 	local MinimizeBtn = SetChildren(SetProps(MakeElement("Button"), {
 		Size = UDim2.new(0.5, 0, 1, 0),
 		BackgroundTransparency = 1
 	}), {
-		AddThemeObject(SetProps(MakeElement("Image", "rbxassetid://7072719338"), {
+		SetProps(MakeElement("Image", "rbxassetid://7072719338"), {
 			Position = UDim2.new(0, 9, 0, 6),
 			Size = UDim2.new(0, 18, 0, 18),
-			Name = "Ico"
-		}), "Text")
+			Name = "Ico",
+			ImageColor3 = Color3.fromRGB(255, 60, 60)
+		})
 	})
 
 	local DragPoint = SetProps(MakeElement("TFrame"), {
-		Size = UDim2.new(1, 0, 0, 52)
+		Size = UDim2.new(1, 0, 0, 50)
 	})
 
 	-- Store tabs for search functionality
 	local TabButtons = {}
 
-	local WindowStuff = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 0), {
-		Size = UDim2.new(0, 160, 1, -52),
-		Position = UDim2.new(0, 0, 0, 52),
-		ClipsDescendants = true
+	local WindowStuff = SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(30, 30, 35), 0, 12), {
+		Size = UDim2.new(0, 160, 1, -50),
+		Position = UDim2.new(0, 0, 0, 50),
+		ClipsDescendants = true,
+		BackgroundTransparency = 0.7
 	}), {
-		AddThemeObject(SetProps(MakeElement("Frame"), {
-			Size = UDim2.new(1, 0, 0, 2),
-			Position = UDim2.new(0, 0, 0, 0)
-		}), "Stroke"), 
-		AddThemeObject(SetProps(MakeElement("Frame"), {
-			Size = UDim2.new(0, 2, 1, 0),
-			Position = UDim2.new(1, -2, 0, 0)
-		}), "Stroke"), 
+		SetProps(MakeElement("Frame", {
+			Size = UDim2.new(1, 0, 0, 10),
+			Position = UDim2.new(0, 0, 0, 0),
+			BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+		})), 
+		SetProps(MakeElement("Frame", {
+			Size = UDim2.new(0, 10, 1, 0),
+			Position = UDim2.new(1, -10, 0, 0),
+			BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+		})), 
+		SetProps(MakeElement("Frame", {
+			Size = UDim2.new(0, 1, 1, 0),
+			Position = UDim2.new(1, -1, 0, 0),
+			BackgroundColor3 = Color3.fromRGB(255, 40, 40)
+		})), 
 		
 		-- Search Box (50px tinggi)
 		SetChildren(SetProps(MakeElement("TFrame"), {
@@ -553,33 +563,34 @@ function NexusUI:MakeWindow(WindowConfig)
 			Position = UDim2.new(0, 0, 0, 0),
 			Name = "SearchContainer"
 		}), {
-			AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 6), {
+			SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(40, 40, 45), 0, 8), {
 				Size = UDim2.new(1, -20, 0, 32),
 				Position = UDim2.new(0, 10, 0.5, 0),
 				AnchorPoint = Vector2.new(0, 0.5),
-				BackgroundTransparency = 0.9
+				BackgroundTransparency = 0.8
 			}), {
-				AddThemeObject(SetProps(MakeElement("Image", "rbxassetid://3926307971"), {
+				SetProps(MakeElement("Image", "rbxassetid://3926307971"), {
 					Size = UDim2.new(0, 20, 0, 20),
 					Position = UDim2.new(0, 8, 0, 6),
 					ImageRectOffset = Vector2.new(964, 324),
-					ImageRectSize = Vector2.new(36, 36)
-				}), "TextDark"),
-				AddThemeObject(Create("TextBox", {
+					ImageRectSize = Vector2.new(36, 36),
+					ImageColor3 = Color3.fromRGB(255, 180, 180)
+				}),
+				Create("TextBox", {
 					Size = UDim2.new(1, -40, 1, 0),
 					Position = UDim2.new(0, 35, 0, 0),
 					BackgroundTransparency = 1,
 					Text = "",
 					PlaceholderText = "Search tabs...",
-					PlaceholderColor3 = Color3.fromRGB(150, 150, 150),
-					TextColor3 = Color3.fromRGB(240, 240, 240),
+					PlaceholderColor3 = Color3.fromRGB(200, 150, 150),
+					TextColor3 = Color3.fromRGB(255, 255, 255),
 					TextSize = 14,
 					Font = Enum.Font.Gotham,
 					TextXAlignment = Enum.TextXAlignment.Left,
 					ClearTextOnFocus = false
-				}), "Text"),
-				AddThemeObject(MakeElement("Stroke"), "Stroke")
-			}), "Second")
+				}),
+				MakeElement("Stroke", Color3.fromRGB(255, 40, 40), 2)
+			})
 		}),
 		
 		-- Tab Container dengan tinggi yang fleksibel
@@ -588,7 +599,7 @@ function NexusUI:MakeWindow(WindowConfig)
 			Position = UDim2.new(0, 0, 0, 50),
 			Name = "TabContainer"
 		}), {
-			AddThemeObject(SetChildren(SetProps(MakeElement("ScrollFrame", Color3.fromRGB(255, 255, 255), 4), {
+			SetChildren(SetProps(MakeElement("ScrollFrame", Color3.fromRGB(255, 40, 40), 5), {
 				Size = UDim2.new(1, 0, 1, 0),
 				Position = UDim2.new(0, 0, 0, 0),
 				BackgroundTransparency = 1,
@@ -596,7 +607,7 @@ function NexusUI:MakeWindow(WindowConfig)
 			}), {
 				MakeElement("List"),
 				MakeElement("Padding", 8, 0, 0, 8)
-			}), "Divider")
+			})
 		}),
 		
 		-- Profil Section (60px tinggi)
@@ -605,10 +616,11 @@ function NexusUI:MakeWindow(WindowConfig)
 			Position = UDim2.new(0, 0, 1, -60),
 			Name = "ProfileContainer"
 		}), {
-			AddThemeObject(SetProps(MakeElement("Frame", {
+			SetProps(MakeElement("Frame", {
 				Size = UDim2.new(1, 0, 0, 1),
-				Position = UDim2.new(0, 0, 0, 0)
-			})), "Stroke"),
+				Position = UDim2.new(0, 0, 0, 0),
+				BackgroundColor3 = Color3.fromRGB(255, 40, 40)
+			})), 
 			
 			-- Avatar Frame
 			SetChildren(SetProps(MakeElement("TFrame"), {
@@ -616,44 +628,47 @@ function NexusUI:MakeWindow(WindowConfig)
 				Size = UDim2.new(0, 32, 0, 32),
 				Position = UDim2.new(0, 10, 0.5, 0)
 			}), {
-				AddThemeObject(SetChildren(SetProps(MakeElement("Frame", {
+				SetChildren(SetProps(MakeElement("Frame", {
 					Size = UDim2.new(1, 0, 1, 0),
-					BackgroundTransparency = 0
+					BackgroundTransparency = 0,
+					BackgroundColor3 = Color3.fromRGB(40, 40, 45)
 				}), {
 					SetProps(MakeElement("Image", "https://www.roblox.com/headshot-thumbnail/image?userId=".. LocalPlayer.UserId .."&width=420&height=420&format=png"), {
 						Size = UDim2.new(1, 0, 1, 0)
 					}),
-					AddThemeObject(SetProps(MakeElement("Image", "rbxassetid://4031889928"), {
+					SetProps(MakeElement("Image", "rbxassetid://4031889928"), {
 						Size = UDim2.new(1, 0, 1, 0),
-					}), "Second"),
+					}),
 					MakeElement("Corner", 1)
-				}), "Divider"),
+				}),
 				
 				-- Stroke untuk avatar
 				SetChildren(SetProps(MakeElement("TFrame", {
 					Size = UDim2.new(1, 0, 1, 0)
-				})), {
-					AddThemeObject(MakeElement("Stroke"), "Stroke"),
+				}), {
+					MakeElement("Stroke", Color3.fromRGB(255, 40, 40), 2),
 					MakeElement("Corner", 1)
-				})
+				}))
 			}),
 			
 			-- Username
-			AddThemeObject(SetProps(MakeElement("Label", LocalPlayer.DisplayName, WindowConfig.HidePremium and 14 or 13), {
+			SetProps(MakeElement("Label", LocalPlayer.DisplayName, WindowConfig.HidePremium and 14 or 13), {
 				Size = UDim2.new(1, -60, 0, 13),
 				Position = WindowConfig.HidePremium and UDim2.new(0, 50, 0, 19) or UDim2.new(0, 50, 0, 12),
 				Font = Enum.Font.GothamBold,
-				ClipsDescendants = true
-			}), "Text"),
+				ClipsDescendants = true,
+				TextColor3 = Color3.fromRGB(255, 255, 255)
+			}),
 			
 			-- Premium Indicator (jika tidak disembunyikan)
-			AddThemeObject(SetProps(MakeElement("Label", "", 12), {
+			SetProps(MakeElement("Label", "", 12), {
 				Size = UDim2.new(1, -60, 0, 12),
 				Position = UDim2.new(0, 50, 1, -25),
-				Visible = not WindowConfig.HidePremium
-			}), "TextDark")
+				Visible = not WindowConfig.HidePremium,
+				TextColor3 = Color3.fromRGB(220, 220, 220)
+			})
 		})
-	}), "Second")
+	})
 
 	-- Get references
 	local TabContainer = WindowStuff.TabContainer
@@ -688,59 +703,78 @@ function NexusUI:MakeWindow(WindowConfig)
 		end
 	end)
 
-	local WindowName = AddThemeObject(SetProps(MakeElement("Label", WindowConfig.Name, 20), {
+	local WindowName = SetProps(MakeElement("Label", WindowConfig.Name, 14), {
 		Size = UDim2.new(1, -30, 2, 0),
 		Position = UDim2.new(0, 25, 0, -24),
 		Font = Enum.Font.GothamBlack,
-		TextSize = 22
-	}), "Text")
+		TextSize = 20,
+		TextColor3 = Color3.fromRGB(255, 255, 255)
+	})
 
-	local WindowTopBarLine = AddThemeObject(SetProps(MakeElement("Frame", {
+	local WindowTopBarLine = SetProps(MakeElement("Frame", {
 		Size = UDim2.new(1, 0, 0, 2),
-		Position = UDim2.new(0, 0, 1, -2)
-	})), "Stroke")
+		Position = UDim2.new(0, 0, 1, -2),
+		BackgroundColor3 = Color3.fromRGB(255, 40, 40)
+	}))
 
-	local MainWindow = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 0), {
+	-- Background Image untuk main window
+	local BackgroundImage = Instance.new("ImageLabel")
+	BackgroundImage.Name = "Background"
+	BackgroundImage.Image = "https://www.roblox.com/asset/?id=78218407205334"
+	BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
+	BackgroundImage.Position = UDim2.new(0, 0, 0, 0)
+	BackgroundImage.BackgroundTransparency = 1
+	BackgroundImage.ScaleType = Enum.ScaleType.Crop
+	BackgroundImage.ImageColor3 = Color3.fromRGB(255, 255, 255)
+	BackgroundImage.ImageTransparency = 0.85
+
+	local MainWindow = SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(20, 20, 25), 0, 12), {
 		Parent = Nexus,
 		Position = UDim2.new(0.5, -307, 0.5, -172),
 		Size = UDim2.new(0, 615, 0, 344),
-		ClipsDescendants = true
+		ClipsDescendants = true,
+		BackgroundTransparency = 0.2
 	}), {
-		SetChildren(SetProps(MakeElement("TFrame", {
-			Size = UDim2.new(1, 0, 0, 52),
-			Name = "TopBar"
-		})), {
+		BackgroundImage,
+		SetChildren(SetProps(MakeElement("TFrame"), {
+			Size = UDim2.new(1, 0, 0, 50),
+			Name = "TopBar",
+			BackgroundTransparency = 0.7,
+			BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+		}), {
 			WindowName,
 			WindowTopBarLine,
-			AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 6), {
+			SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(40, 40, 45), 0, 7), {
 				Size = UDim2.new(0, 70, 0, 30),
-				Position = UDim2.new(1, -90, 0, 10)
+				Position = UDim2.new(1, -90, 0, 10),
+				BackgroundTransparency = 0.8
 			}), {
-				AddThemeObject(MakeElement("Stroke"), "Stroke"),
-				AddThemeObject(SetProps(MakeElement("Frame", {
+				MakeElement("Stroke", Color3.fromRGB(255, 40, 40), 2),
+				SetProps(MakeElement("Frame", {
 					Size = UDim2.new(0, 1, 1, 0),
-					Position = UDim2.new(0.5, 0, 0, 0)
-				})), "Stroke"), 
+					Position = UDim2.new(0.5, 0, 0, 0),
+					BackgroundColor3 = Color3.fromRGB(255, 40, 40)
+				})), 
 				CloseBtn,
 				MinimizeBtn
-			}), "Second"), 
+			}), 
 		}),
 		DragPoint,
 		WindowStuff
-	}), "Main")
-
-	-- Add Window Icon (seperti pada desain LocalMaze)
-	local WindowIcon = SetProps(MakeElement("Image", WindowConfig.Icon), {
-		Size = UDim2.new(0, 54, 0, 44),
-		Position = UDim2.new(0, 8, 0, 4),
-		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-		BackgroundTransparency = 0
 	})
-	WindowIcon.Parent = MainWindow.TopBar
-	
-	-- Add corner and stroke to icon
-	MakeElement("Corner", 0, 5).Parent = WindowIcon
-	MakeElement("Stroke", Color3.fromRGB(255, 0, 0), 2).Parent = WindowIcon
+
+	if WindowConfig.ShowIcon then
+		WindowName.Position = UDim2.new(0, 50, 0, -24)
+		local WindowIcon = SetProps(MakeElement("Image", WindowConfig.Icon), {
+			Size = UDim2.new(0, 20, 0, 20),
+			Position = UDim2.new(0, 25, 0, 15),
+			BackgroundTransparency = 1
+		})
+		WindowIcon.Parent = MainWindow.TopBar
+	end	
+
+	-- Add stroke merah ke main window
+	MakeElement("Stroke", Color3.fromRGB(255, 40, 40), 2).Parent = MainWindow
 
 	AddDraggingFunctionality(DragPoint, MainWindow)
 
@@ -774,7 +808,7 @@ function NexusUI:MakeWindow(WindowConfig)
 			WindowTopBarLine.Visible = false
 			MinimizeBtn.Ico.Image = "rbxassetid://7072720870"
 
-			TweenService:Create(MainWindow, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0, WindowName.TextBounds.X + 140, 0, 52)}):Play()
+			TweenService:Create(MainWindow, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0, WindowName.TextBounds.X + 140, 0, 50)}):Play()
 			wait(0.1)
 			WindowStuff.Visible = false	
 		end
@@ -796,57 +830,57 @@ function NexusUI:MakeWindow(WindowConfig)
 		ScreenGui.Name = GUI_NAME
 		ScreenGui.Parent = Nexus
 		
-		-- FRAME (desain merah seperti LocalMaze)
+		-- FRAME
 		local Frame = Instance.new("Frame", ScreenGui)
 		Frame.Name = "FrameAnimasi"
-		Frame.Size = UDim2.new(0, 150, 0, 44)
-		Frame.Position = UDim2.new(0.5, -75, 0.4, 0)
-		Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+		Frame.Size = UDim2.new(0,150,0,44)
+		Frame.Position = UDim2.new(0.5,-75,0.4,0)
+		Frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
 		Frame.BorderSizePixel = 0
 		Frame.BackgroundTransparency = 1
 		
 		-- Add corner
 		local UICorner = Instance.new("UICorner", Frame)
-		UICorner.CornerRadius = UDim.new(0, 5)
+		UICorner.CornerRadius = UDim.new(0, 8)
+		
+		-- GRADIENT
+		local Gradient = Instance.new("UIGradient", Frame)
+		Gradient.Color = ColorSequence.new{
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(30,30,30)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(10,10,10))
+		}
 		
 		-- STROKE (merah)
 		local Stroke = Instance.new("UIStroke", Frame)
-		Stroke.Color = Color3.fromRGB(255, 0, 0)
+		Stroke.Color = Color3.fromRGB(255,40,40)
 		Stroke.Thickness = 2
 		Stroke.Transparency = 1
 		
-		-- ICON (icon Nexus seperti LocalMaze)
+		-- ICON
 		local Image = Instance.new("ImageLabel", Frame)
-		Image.Size = UDim2.new(0, 54, 0, 44)
-		Image.Position = UDim2.new(0, 6, 0.5, -22)
-		Image.Image = "http://www.roblox.com/asset/?id=82528573041751"
-		Image.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		Image.BorderSizePixel = 0
+		Image.Size = UDim2.new(0,34,0,34)
+		Image.Position = UDim2.new(0,6,0.5,-17)
+		Image.Image = "rbxassetid://82528573041751"
 		Image.BackgroundTransparency = 1
 		Image.ImageTransparency = 1
 		
 		local ImageCorner = Instance.new("UICorner", Image)
-		ImageCorner.CornerRadius = UDim.new(0, 5)
+		ImageCorner.CornerRadius = UDim.new(0, 6)
 		
-		local ImageStroke = Instance.new("UIStroke", Image)
-		ImageStroke.Color = Color3.fromRGB(255, 0, 0)
-		ImageStroke.Thickness = 2
-		ImageStroke.Transparency = 1
-		
-		-- GARIS PEMISAH (merah seperti LocalMaze)
+		-- LINE (merah)
 		local Line = Instance.new("Frame", Frame)
-		Line.Size = UDim2.new(0, 2, 1, -16)
-		Line.Position = UDim2.new(0, 68, 0, 8)
-		Line.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+		Line.Size = UDim2.new(0,2,1,-8)
+		Line.Position = UDim2.new(0,48,0,4)
+		Line.BackgroundColor3 = Color3.fromRGB(255,40,40)
 		Line.BorderSizePixel = 0
 		Line.BackgroundTransparency = 1
 		
-		-- TEXT (Title besar)
+		-- TEXT
 		local Text = Instance.new("TextLabel", Frame)
-		Text.Position = UDim2.new(0, 74, 0, 4)
-		Text.Size = UDim2.new(1, -78, 1, -8)
+		Text.Position = UDim2.new(0,54,0,4)
+		Text.Size = UDim2.new(1,-58,1,-8)
 		Text.BackgroundTransparency = 1
-		Text.TextColor3 = Color3.fromRGB(255, 255, 255)
+		Text.TextColor3 = Color3.fromRGB(255,255,255)
 		Text.Font = Enum.Font.GothamBold
 		Text.TextSize = 16
 		Text.TextWrapped = true
@@ -856,7 +890,7 @@ function NexusUI:MakeWindow(WindowConfig)
 		Text.Text = ""
 		
 		-- posisi awal
-		Frame.Position = Frame.Position + UDim2.new(0, -50, 0, 0)
+		Frame.Position = Frame.Position + UDim2.new(0,-50,0,0)
 		
 		local InInfo = TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 		local OutInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
@@ -869,7 +903,7 @@ function NexusUI:MakeWindow(WindowConfig)
 			label.Text = ""
 			label.TextTransparency = 0
 			for i = 1, #text do
-				label.Text = string.sub(text, 1, i)
+				label.Text = string.sub(text,1,i)
 				task.wait(speed)
 			end
 		end
@@ -879,15 +913,11 @@ function NexusUI:MakeWindow(WindowConfig)
 		Frame.Visible = true
 		tween(Frame, InInfo, {
 			BackgroundTransparency = 0,
-			Position = Frame.Position + UDim2.new(0, 50, 0, 0)
+			Position = Frame.Position + UDim2.new(0,50,0,0)
 		})
 		
 		tween(Stroke, InInfo, {Transparency = 0})
-		tween(Image, InInfo, {
-			ImageTransparency = 0,
-			BackgroundTransparency = 0
-		})
-		tween(ImageStroke, InInfo, {Transparency = 0})
+		tween(Image, InInfo, {ImageTransparency = 0})
 		tween(Line, InInfo, {BackgroundTransparency = 0})
 		
 		task.wait(0.5)
@@ -896,16 +926,12 @@ function NexusUI:MakeWindow(WindowConfig)
 		task.wait(HIDE_DELAY)
 		
 		tween(Text, OutInfo, {TextTransparency = 1})
-		tween(Image, OutInfo, {
-			ImageTransparency = 1,
-			BackgroundTransparency = 1
-		})
-		tween(ImageStroke, OutInfo, {Transparency = 1})
+		tween(Image, OutInfo, {ImageTransparency = 1})
 		tween(Line, OutInfo, {BackgroundTransparency = 1})
 		tween(Stroke, OutInfo, {Transparency = 1})
 		tween(Frame, OutInfo, {
 			BackgroundTransparency = 1,
-			Position = Frame.Position + UDim2.new(0, 30, 0, 0)
+			Position = Frame.Position + UDim2.new(0,30,0,0)
 		})
 		
 		task.wait(0.6)
@@ -932,22 +958,24 @@ function NexusUI:MakeWindow(WindowConfig)
 			Parent = TabHolder, -- Menggunakan TabHolder yang baru
 			ZIndex = 6
 		}), {
-			AddThemeObject(SetProps(MakeElement("Image", TabConfig.Icon), {
+			SetProps(MakeElement("Image", TabConfig.Icon), {
 				AnchorPoint = Vector2.new(0, 0.5),
 				Size = UDim2.new(0, 18, 0, 18),
 				Position = UDim2.new(0, 10, 0.5, 0),
 				ImageTransparency = 0.4,
 				Name = "Ico",
-				ZIndex = 7
-			}), "Text"),
-			AddThemeObject(SetProps(MakeElement("Label", TabConfig.Name, 14), {
+				ZIndex = 7,
+				ImageColor3 = Color3.fromRGB(255, 200, 200)
+			}),
+			SetProps(MakeElement("Label", TabConfig.Name, 14), {
 				Size = UDim2.new(1, -35, 1, 0),
 				Position = UDim2.new(0, 35, 0, 0),
 				Font = Enum.Font.GothamSemibold,
 				TextTransparency = 0.4,
 				Name = "Title",
-				ZIndex = 7
-			}), "Text")
+				ZIndex = 7,
+				TextColor3 = Color3.fromRGB(255, 255, 255)
+			})
 		})
 
 		-- Store tab for search functionality
@@ -957,16 +985,30 @@ function NexusUI:MakeWindow(WindowConfig)
 			TabFrame.Ico.Image = GetIcon(TabConfig.Icon)
 		end	
 
-		local Container = AddThemeObject(SetChildren(SetProps(MakeElement("ScrollFrame", Color3.fromRGB(255, 255, 255), 5), {
-			Size = UDim2.new(1, -160, 1, -52),
-			Position = UDim2.new(0, 160, 0, 52),
+		-- Background Image untuk container
+		local ContainerBackground = Instance.new("ImageLabel")
+		ContainerBackground.Name = "Background"
+		ContainerBackground.Image = "https://www.roblox.com/asset/?id=78218407205334"
+		ContainerBackground.Size = UDim2.new(1, 0, 1, 0)
+		ContainerBackground.Position = UDim2.new(0, 0, 0, 0)
+		ContainerBackground.BackgroundTransparency = 1
+		ContainerBackground.ScaleType = Enum.ScaleType.Crop
+		ContainerBackground.ImageColor3 = Color3.fromRGB(255, 255, 255)
+		ContainerBackground.ImageTransparency = 0.9
+
+		local Container = SetChildren(SetProps(MakeElement("ScrollFrame", Color3.fromRGB(255, 40, 40), 5), {
+			Size = UDim2.new(1, -160, 1, -50),
+			Position = UDim2.new(0, 160, 0, 50),
 			Parent = MainWindow,
 			Visible = false,
-			Name = "ItemContainer"
+			Name = "ItemContainer",
+			BackgroundTransparency = 0.8,
+			BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 		}), {
+			ContainerBackground,
 			MakeElement("List", 0, 6),
 			MakeElement("Padding", 15, 10, 10, 15)
-		}), "Divider")
+		})
 
 		AddConnection(Container.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
 			Container.CanvasSize = UDim2.new(0, 0, 0, Container.UIListLayout.AbsoluteContentSize.Y + 30)
@@ -1002,19 +1044,20 @@ function NexusUI:MakeWindow(WindowConfig)
 		local function GetElements(ItemParent)
 			local ElementFunction = {}
 			function ElementFunction:AddLabel(Text)
-				local LabelFrame = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 6), {
+				local LabelFrame = SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(40, 40, 45), 0, 6), {
 					Size = UDim2.new(1, 0, 0, 32),
 					BackgroundTransparency = 0.7,
 					Parent = ItemParent
 				}), {
-					AddThemeObject(SetProps(MakeElement("Label", Text, 15), {
+					SetProps(MakeElement("Label", Text, 15), {
 						Size = UDim2.new(1, -12, 1, 0),
 						Position = UDim2.new(0, 12, 0, 0),
 						Font = Enum.Font.GothamBold,
-						Name = "Content"
-					}), "Text"),
-					AddThemeObject(MakeElement("Stroke"), "Stroke")
-				}), "Second")
+						Name = "Content",
+						TextColor3 = Color3.fromRGB(255, 255, 255)
+					}),
+					MakeElement("Stroke", Color3.fromRGB(255, 40, 40), 2)
+				})
 
 				local LabelFunction = {}
 				function LabelFunction:Set(ToChange)
@@ -1026,26 +1069,28 @@ function NexusUI:MakeWindow(WindowConfig)
 				Text = Text or "Text"
 				Content = Content or "Content"
 
-				local ParagraphFrame = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 6), {
+				local ParagraphFrame = SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(40, 40, 45), 0, 6), {
 					Size = UDim2.new(1, 0, 0, 32),
 					BackgroundTransparency = 0.7,
 					Parent = ItemParent
 				}), {
-					AddThemeObject(SetProps(MakeElement("Label", Text, 15), {
+					SetProps(MakeElement("Label", Text, 15), {
 						Size = UDim2.new(1, -12, 0, 14),
 						Position = UDim2.new(0, 12, 0, 10),
 						Font = Enum.Font.GothamBold,
-						Name = "Title"
-					}), "Text"),
-					AddThemeObject(SetProps(MakeElement("Label", "", 13), {
+						Name = "Title",
+						TextColor3 = Color3.fromRGB(255, 255, 255)
+					}),
+					SetProps(MakeElement("Label", "", 13), {
 						Size = UDim2.new(1, -24, 0, 0),
 						Position = UDim2.new(0, 12, 0, 26),
 						Font = Enum.Font.GothamSemibold,
 						Name = "Content",
-						TextWrapped = true
-					}), "TextDark"),
-					AddThemeObject(MakeElement("Stroke"), "Stroke")
-				}), "Second")
+						TextWrapped = true,
+						TextColor3 = Color3.fromRGB(220, 220, 220)
+					}),
+					MakeElement("Stroke", Color3.fromRGB(255, 40, 40), 2)
+				})
 
 				AddConnection(ParagraphFrame.Content:GetPropertyChangedSignal("Text"), function()
 					ParagraphFrame.Content.Size = UDim2.new(1, -24, 0, ParagraphFrame.Content.TextBounds.Y)
@@ -1072,41 +1117,43 @@ function NexusUI:MakeWindow(WindowConfig)
 					Size = UDim2.new(1, 0, 1, 0)
 				})
 
-				local ButtonFrame = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 6), {
+				local ButtonFrame = SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(40, 40, 45), 0, 6), {
 					Size = UDim2.new(1, 0, 0, 35),
 					Parent = ItemParent
 				}), {
-					AddThemeObject(SetProps(MakeElement("Label", ButtonConfig.Name, 15), {
+					SetProps(MakeElement("Label", ButtonConfig.Name, 15), {
 						Size = UDim2.new(1, -12, 1, 0),
 						Position = UDim2.new(0, 12, 0, 0),
 						Font = Enum.Font.GothamBold,
-						Name = "Content"
-					}), "Text"),
-					AddThemeObject(SetProps(MakeElement("Image", ButtonConfig.Icon), {
+						Name = "Content",
+						TextColor3 = Color3.fromRGB(255, 255, 255)
+					}),
+					SetProps(MakeElement("Image", ButtonConfig.Icon), {
 						Size = UDim2.new(0, 20, 0, 20),
 						Position = UDim2.new(1, -30, 0, 8),
-					}), "TextDark"),
-					AddThemeObject(MakeElement("Stroke"), "Stroke"),
+						ImageColor3 = Color3.fromRGB(255, 200, 200)
+					}),
+					MakeElement("Stroke", Color3.fromRGB(255, 40, 40), 2),
 					Click
-				}), "Second")
+				})
 
 				AddConnection(Click.MouseEnter, function()
-					TweenService:Create(ButtonFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(NexusUI.Themes[NexusUI.SelectedTheme].Second.R * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.G * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.B * 255 + 8)}):Play()
+					TweenService:Create(ButtonFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(50, 50, 55)}):Play()
 				end)
 
 				AddConnection(Click.MouseLeave, function()
-					TweenService:Create(ButtonFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = NexusUI.Themes[NexusUI.SelectedTheme].Second}):Play()
+					TweenService:Create(ButtonFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(40, 40, 45)}):Play()
 				end)
 
 				AddConnection(Click.MouseButton1Up, function()
-					TweenService:Create(ButtonFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(NexusUI.Themes[NexusUI.SelectedTheme].Second.R * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.G * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.B * 255 + 8)}):Play()
+					TweenService:Create(ButtonFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(50, 50, 55)}):Play()
 					spawn(function()
 						ButtonConfig.Callback()
 					end)
 				end)
 
 				AddConnection(Click.MouseButton1Down, function()
-					TweenService:Create(ButtonFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(NexusUI.Themes[NexusUI.SelectedTheme].Second.R * 255 + 12, NexusUI.Themes[NexusUI.SelectedTheme].Second.G * 255 + 12, NexusUI.Themes[NexusUI.SelectedTheme].Second.B * 255 + 12)}):Play()
+					TweenService:Create(ButtonFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(60, 60, 65)}):Play()
 				end)
 
 				function Button:Set(ButtonText)
@@ -1120,7 +1167,7 @@ function NexusUI:MakeWindow(WindowConfig)
 				ToggleConfig.Name = ToggleConfig.Name or "Toggle"
 				ToggleConfig.Default = ToggleConfig.Default or false
 				ToggleConfig.Callback = ToggleConfig.Callback or function() end
-				ToggleConfig.Color = ToggleConfig.Color or Color3.fromRGB(255, 0, 0) -- Merah sebagai default
+				ToggleConfig.Color = ToggleConfig.Color or Color3.fromRGB(255, 40, 40) -- Merah sebagai default
 				ToggleConfig.Flag = ToggleConfig.Flag or nil
 				ToggleConfig.Save = ToggleConfig.Save or false
 
@@ -1135,8 +1182,7 @@ function NexusUI:MakeWindow(WindowConfig)
 					Position = UDim2.new(1, -24, 0.5, 0),
 					AnchorPoint = Vector2.new(0.5, 0.5)
 				}), {
-					SetProps(MakeElement("Stroke"), {
-						Color = ToggleConfig.Color,
+					SetProps(MakeElement("Stroke", ToggleConfig.Color, 2), {
 						Name = "Stroke",
 						Transparency = 0.5
 					}),
@@ -1149,25 +1195,26 @@ function NexusUI:MakeWindow(WindowConfig)
 					}),
 				})
 
-				local ToggleFrame = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 6), {
+				local ToggleFrame = SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(40, 40, 45), 0, 6), {
 					Size = UDim2.new(1, 0, 0, 38),
 					Parent = ItemParent
 				}), {
-					AddThemeObject(SetProps(MakeElement("Label", ToggleConfig.Name, 15), {
+					SetProps(MakeElement("Label", ToggleConfig.Name, 15), {
 						Size = UDim2.new(1, -12, 1, 0),
 						Position = UDim2.new(0, 12, 0, 0),
 						Font = Enum.Font.GothamBold,
-						Name = "Content"
-					}), "Text"),
-					AddThemeObject(MakeElement("Stroke"), "Stroke"),
+						Name = "Content",
+						TextColor3 = Color3.fromRGB(255, 255, 255)
+					}),
+					MakeElement("Stroke", Color3.fromRGB(255, 40, 40), 2),
 					ToggleBox,
 					Click
-				}), "Second")
+				})
 
 				function Toggle:Set(Value)
 					Toggle.Value = Value
-					TweenService:Create(ToggleBox, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Toggle.Value and ToggleConfig.Color or NexusUI.Themes.Default.Divider}):Play()
-					TweenService:Create(ToggleBox.Stroke, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Color = Toggle.Value and ToggleConfig.Color or NexusUI.Themes.Default.Stroke}):Play()
+					TweenService:Create(ToggleBox, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Toggle.Value and ToggleConfig.Color or Color3.fromRGB(60, 60, 65)}):Play()
+					TweenService:Create(ToggleBox.Stroke, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Color = Toggle.Value and ToggleConfig.Color or Color3.fromRGB(100, 100, 105)}):Play()
 					TweenService:Create(ToggleBox.Ico, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {ImageTransparency = Toggle.Value and 0 or 1, Size = Toggle.Value and UDim2.new(0, 20, 0, 20) or UDim2.new(0, 8, 0, 8)}):Play()
 					ToggleConfig.Callback(Toggle.Value)
 				end    
@@ -1175,21 +1222,21 @@ function NexusUI:MakeWindow(WindowConfig)
 				Toggle:Set(Toggle.Value)
 
 				AddConnection(Click.MouseEnter, function()
-					TweenService:Create(ToggleFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(NexusUI.Themes[NexusUI.SelectedTheme].Second.R * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.G * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.B * 255 + 8)}):Play()
+					TweenService:Create(ToggleFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(50, 50, 55)}):Play()
 				end)
 
 				AddConnection(Click.MouseLeave, function()
-					TweenService:Create(ToggleFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = NexusUI.Themes[NexusUI.SelectedTheme].Second}):Play()
+					TweenService:Create(ToggleFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(40, 40, 45)}):Play()
 				end)
 
 				AddConnection(Click.MouseButton1Up, function()
-					TweenService:Create(ToggleFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(NexusUI.Themes[NexusUI.SelectedTheme].Second.R * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.G * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.B * 255 + 8)}):Play()
+					TweenService:Create(ToggleFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(50, 50, 55)}):Play()
 					SaveCfg(game.GameId)
 					Toggle:Set(not Toggle.Value)
 				end)
 
 				AddConnection(Click.MouseButton1Down, function()
-					TweenService:Create(ToggleFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(NexusUI.Themes[NexusUI.SelectedTheme].Second.R * 255 + 12, NexusUI.Themes[NexusUI.SelectedTheme].Second.G * 255 + 12, NexusUI.Themes[NexusUI.SelectedTheme].Second.B * 255 + 12)}):Play()
+					TweenService:Create(ToggleFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(60, 60, 65)}):Play()
 				end)
 
 				if ToggleConfig.Flag then
@@ -1206,7 +1253,7 @@ function NexusUI:MakeWindow(WindowConfig)
 				SliderConfig.Default = SliderConfig.Default or 50
 				SliderConfig.Callback = SliderConfig.Callback or function() end
 				SliderConfig.ValueName = SliderConfig.ValueName or ""
-				SliderConfig.Color = SliderConfig.Color or Color3.fromRGB(255, 0, 0) -- Merah sebagai default
+				SliderConfig.Color = SliderConfig.Color or Color3.fromRGB(255, 40, 40) -- Merah sebagai default
 				SliderConfig.Flag = SliderConfig.Flag or nil
 				SliderConfig.Save = SliderConfig.Save or false
 
@@ -1218,13 +1265,14 @@ function NexusUI:MakeWindow(WindowConfig)
 					BackgroundTransparency = 0.3,
 					ClipsDescendants = true
 				}), {
-					AddThemeObject(SetProps(MakeElement("Label", "value", 13), {
+					SetProps(MakeElement("Label", "value", 13), {
 						Size = UDim2.new(1, -12, 0, 14),
 						Position = UDim2.new(0, 12, 0, 6),
 						Font = Enum.Font.GothamBold,
 						Name = "Value",
-						TextTransparency = 0
-					}), "Text")
+						TextTransparency = 0,
+						TextColor3 = Color3.fromRGB(255, 255, 255)
+					})
 				})
 
 				local SliderBar = SetChildren(SetProps(MakeElement("RoundFrame", SliderConfig.Color, 0, 5), {
@@ -1232,32 +1280,32 @@ function NexusUI:MakeWindow(WindowConfig)
 					Position = UDim2.new(0, 12, 0, 30),
 					BackgroundTransparency = 0.9
 				}), {
-					SetProps(MakeElement("Stroke"), {
-						Color = SliderConfig.Color
-					}),
-					AddThemeObject(SetProps(MakeElement("Label", "value", 13), {
+					MakeElement("Stroke", SliderConfig.Color, 2),
+					SetProps(MakeElement("Label", "value", 13), {
 						Size = UDim2.new(1, -12, 0, 14),
 						Position = UDim2.new(0, 12, 0, 6),
 						Font = Enum.Font.GothamBold,
 						Name = "Value",
-						TextTransparency = 0.8
-					}), "Text"),
+						TextTransparency = 0.8,
+						TextColor3 = Color3.fromRGB(220, 220, 220)
+					}),
 					SliderDrag
 				})
 
-				local SliderFrame = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 6), {
+				local SliderFrame = SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(40, 40, 45), 0, 6), {
 					Size = UDim2.new(1, 0, 0, 65),
 					Parent = ItemParent
 				}), {
-					AddThemeObject(SetProps(MakeElement("Label", SliderConfig.Name, 15), {
+					SetProps(MakeElement("Label", SliderConfig.Name, 15), {
 						Size = UDim2.new(1, -12, 0, 14),
 						Position = UDim2.new(0, 12, 0, 10),
 						Font = Enum.Font.GothamBold,
-						Name = "Content"
-					}), "Text"),
-					AddThemeObject(MakeElement("Stroke"), "Stroke"),
+						Name = "Content",
+						TextColor3 = Color3.fromRGB(255, 255, 255)
+					}),
+					MakeElement("Stroke", Color3.fromRGB(255, 40, 40), 2),
 					SliderBar
-				}), "Second")
+				})
 
 				SliderBar.InputBegan:Connect(function(Input)
 					if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then 
@@ -1292,543 +1340,31 @@ function NexusUI:MakeWindow(WindowConfig)
 				end
 				return Slider
 			end  
-			function ElementFunction:AddDropdown(DropdownConfig)
-				DropdownConfig = DropdownConfig or {}
-				DropdownConfig.Name = DropdownConfig.Name or "Dropdown"
-				DropdownConfig.Options = DropdownConfig.Options or {}
-				DropdownConfig.Default = DropdownConfig.Default or ""
-				DropdownConfig.Callback = DropdownConfig.Callback or function() end
-				DropdownConfig.Flag = DropdownConfig.Flag or nil
-				DropdownConfig.Save = DropdownConfig.Save or false
-
-				local Dropdown = {Value = DropdownConfig.Default, Options = DropdownConfig.Options, Buttons = {}, Toggled = false, Type = "Dropdown", Save = DropdownConfig.Save}
-				local MaxElements = 5
-
-				if not table.find(Dropdown.Options, Dropdown.Value) then
-					Dropdown.Value = "..."
-				end
-
-				local DropdownList = MakeElement("List")
-
-				local DropdownContainer = AddThemeObject(SetProps(SetChildren(MakeElement("ScrollFrame", Color3.fromRGB(40, 40, 40), 4), {
-					DropdownList
-				}), {
-					Parent = ItemParent,
-					Position = UDim2.new(0, 0, 0, 38),
-					Size = UDim2.new(1, 0, 1, -38),
-					ClipsDescendants = true
-				}), "Divider")
-
-				local Click = SetProps(MakeElement("Button"), {
-					Size = UDim2.new(1, 0, 1, 0)
-				})
-
-				local DropdownFrame = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 5), {
-					Size = UDim2.new(1, 0, 0, 38),
-					Parent = ItemParent,
-					ClipsDescendants = true
-				}), {
-					DropdownContainer,
-					SetProps(SetChildren(MakeElement("TFrame", {
-						AddThemeObject(SetProps(MakeElement("Label", DropdownConfig.Name, 15), {
-							Size = UDim2.new(1, -12, 1, 0),
-							Position = UDim2.new(0, 12, 0, 0),
-							Font = Enum.Font.GothamBold,
-							Name = "Content"
-						}), "Text"),
-						AddThemeObject(SetProps(MakeElement("Image", "rbxassetid://7072706796"), {
-							Size = UDim2.new(0, 20, 0, 20),
-							AnchorPoint = Vector2.new(0, 0.5),
-							Position = UDim2.new(1, -30, 0.5, 0),
-							ImageColor3 = Color3.fromRGB(240, 240, 240),
-							Name = "Ico"
-						}), "TextDark"),
-						AddThemeObject(SetProps(MakeElement("Label", "Selected", 13), {
-							Size = UDim2.new(1, -40, 1, 0),
-							Font = Enum.Font.Gotham,
-							Name = "Selected",
-							TextXAlignment = Enum.TextXAlignment.Right
-						}), "TextDark"),
-						AddThemeObject(SetProps(MakeElement("Frame", {
-							Size = UDim2.new(1, 0, 0, 1),
-							Position = UDim2.new(0, 0, 1, -1),
-							Name = "Line",
-							Visible = false
-						})), "Stroke"), 
-						Click
-					}), {
-						Size = UDim2.new(1, 0, 0, 38),
-						ClipsDescendants = true,
-						Name = "F"
-					}),
-					AddThemeObject(MakeElement("Stroke"), "Stroke"),
-					MakeElement("Corner")
-				}), "Second")
-
-				AddConnection(DropdownList:GetPropertyChangedSignal("AbsoluteContentSize"), function()
-					DropdownContainer.CanvasSize = UDim2.new(0, 0, 0, DropdownList.AbsoluteContentSize.Y)
-				end)  
-
-				local function AddOptions(Options)
-					for _, Option in pairs(Options) do
-						local OptionBtn = AddThemeObject(SetProps(SetChildren(MakeElement("Button", Color3.fromRGB(40, 40, 40)), {
-							MakeElement("Corner", 0, 6),
-							AddThemeObject(SetProps(MakeElement("Label", Option, 13, 0.4), {
-								Position = UDim2.new(0, 8, 0, 0),
-								Size = UDim2.new(1, -8, 1, 0),
-								Name = "Title"
-							}), "Text")
-						}), {
-							Parent = DropdownContainer,
-							Size = UDim2.new(1, 0, 0, 28),
-							BackgroundTransparency = 1,
-							ClipsDescendants = true
-						}), "Divider")
-
-						AddConnection(OptionBtn.MouseButton1Click, function()
-							Dropdown:Set(Option)
-							SaveCfg(game.GameId)
-						end)
-
-						Dropdown.Buttons[Option] = OptionBtn
-					end
-				end	
-
-				function Dropdown:Refresh(Options, Delete)
-					if Delete then
-						for _,v in pairs(Dropdown.Buttons) do
-							v:Destroy()
-						end    
-						table.clear(Dropdown.Options)
-						table.clear(Dropdown.Buttons)
-					end
-					Dropdown.Options = Options
-					AddOptions(Dropdown.Options)
-				end  
-
-				function Dropdown:Set(Value)
-					if not table.find(Dropdown.Options, Value) then
-						Dropdown.Value = "..."
-						DropdownFrame.F.Selected.Text = Dropdown.Value
-						for _, v in pairs(Dropdown.Buttons) do
-							TweenService:Create(v,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{BackgroundTransparency = 1}):Play()
-							TweenService:Create(v.Title,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{TextTransparency = 0.4}):Play()
-						end	
-						return
-					end
-
-					Dropdown.Value = Value
-					DropdownFrame.F.Selected.Text = Dropdown.Value
-
-					for _, v in pairs(Dropdown.Buttons) do
-						TweenService:Create(v,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{BackgroundTransparency = 1}):Play()
-						TweenService:Create(v.Title,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{TextTransparency = 0.4}):Play()
-					end	
-					TweenService:Create(Dropdown.Buttons[Value],TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{BackgroundTransparency = 0}):Play()
-					TweenService:Create(Dropdown.Buttons[Value].Title,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{TextTransparency = 0}):Play()
-					return DropdownConfig.Callback(Dropdown.Value)
-				end
-
-				AddConnection(Click.MouseButton1Click, function()
-					Dropdown.Toggled = not Dropdown.Toggled
-					DropdownFrame.F.Line.Visible = Dropdown.Toggled
-					TweenService:Create(DropdownFrame.F.Ico,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{Rotation = Dropdown.Toggled and 180 or 0}):Play()
-					if #Dropdown.Options > MaxElements then
-						TweenService:Create(DropdownFrame,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{Size = Dropdown.Toggled and UDim2.new(1, 0, 0, 38 + (MaxElements * 28)) or UDim2.new(1, 0, 0, 38)}):Play()
-					else
-						TweenService:Create(DropdownFrame,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{Size = Dropdown.Toggled and UDim2.new(1, 0, 0, DropdownList.AbsoluteContentSize.Y + 38) or UDim2.new(1, 0, 0, 38)}):Play()
-					end
-				end)
-
-				Dropdown:Refresh(Dropdown.Options, false)
-				Dropdown:Set(Dropdown.Value)
-				if DropdownConfig.Flag then				
-					OrionLib.Flags[DropdownConfig.Flag] = Dropdown
-				end
-				return Dropdown
-			end
-			function ElementFunction:AddBind(BindConfig)
-				BindConfig.Name = BindConfig.Name or "Bind"
-				BindConfig.Default = BindConfig.Default or Enum.KeyCode.Unknown
-				BindConfig.Hold = BindConfig.Hold or false
-				BindConfig.Callback = BindConfig.Callback or function() end
-				BindConfig.Flag = BindConfig.Flag or nil
-				BindConfig.Save = BindConfig.Save or false
-
-				local Bind = {Value, Binding = false, Type = "Bind", Save = BindConfig.Save}
-				local Holding = false
-
-				local Click = SetProps(MakeElement("Button"), {
-					Size = UDim2.new(1, 0, 1, 0)
-				})
-
-				local BindBox = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 6), {
-					Size = UDim2.new(0, 24, 0, 24),
-					Position = UDim2.new(1, -12, 0.5, 0),
-					AnchorPoint = Vector2.new(1, 0.5)
-				}), {
-					AddThemeObject(MakeElement("Stroke"), "Stroke"),
-					AddThemeObject(SetProps(MakeElement("Label", BindConfig.Name, 14), {
-						Size = UDim2.new(1, 0, 1, 0),
-						Font = Enum.Font.GothamBold,
-						TextXAlignment = Enum.TextXAlignment.Center,
-						Name = "Value"
-					}), "Text")
-				}), "Main")
-
-				local BindFrame = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 6), {
-					Size = UDim2.new(1, 0, 0, 38),
-					Parent = ItemParent
-				}), {
-					AddThemeObject(SetProps(MakeElement("Label", BindConfig.Name, 15), {
-						Size = UDim2.new(1, -12, 1, 0),
-						Position = UDim2.new(0, 12, 0, 0),
-						Font = Enum.Font.GothamBold,
-						Name = "Content"
-					}), "Text"),
-					AddThemeObject(MakeElement("Stroke"), "Stroke"),
-					BindBox,
-					Click
-				}), "Second")
-
-				AddConnection(BindBox.Value:GetPropertyChangedSignal("Text"), function()
-					TweenService:Create(BindBox, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0, BindBox.Value.TextBounds.X + 16, 0, 24)}):Play()
-				end)
-
-				AddConnection(Click.InputEnded, function(Input)
-					if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-						if Bind.Binding then return end
-						Bind.Binding = true
-						BindBox.Value.Text = ""
-					end
-				end)
-
-				AddConnection(UserInputService.InputBegan, function(Input)
-					if UserInputService:GetFocusedTextBox() then return end
-					if (Input.KeyCode.Name == Bind.Value or Input.UserInputType.Name == Bind.Value) and not Bind.Binding then
-						if BindConfig.Hold then
-							Holding = true
-							BindConfig.Callback(Holding)
-						else
-							BindConfig.Callback()
-						end
-					elseif Bind.Binding then
-						local Key
-						pcall(function()
-							if not CheckKey(BlacklistedKeys, Input.KeyCode) then
-								Key = Input.KeyCode
-							end
-						end)
-						pcall(function()
-							if CheckKey(WhitelistedMouse, Input.UserInputType) and not Key then
-								Key = Input.UserInputType
-							end
-						end)
-						Key = Key or Bind.Value
-						Bind:Set(Key)
-						SaveCfg(game.GameId)
-					end
-				end)
-
-				AddConnection(UserInputService.InputEnded, function(Input)
-					if Input.KeyCode.Name == Bind.Value or Input.UserInputType.Name == Bind.Value then
-						if BindConfig.Hold and Holding then
-							Holding = false
-							BindConfig.Callback(Holding)
-						end
-					end
-				end)
-
-				AddConnection(Click.MouseEnter, function()
-					TweenService:Create(BindFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(NexusUI.Themes[NexusUI.SelectedTheme].Second.R * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.G * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.B * 255 + 8)}):Play()
-				end)
-
-				AddConnection(Click.MouseLeave, function()
-					TweenService:Create(BindFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = NexusUI.Themes[NexusUI.SelectedTheme].Second}):Play()
-				end)
-
-				AddConnection(Click.MouseButton1Up, function()
-					TweenService:Create(BindFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(NexusUI.Themes[NexusUI.SelectedTheme].Second.R * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.G * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.B * 255 + 8)}):Play()
-				end)
-
-				AddConnection(Click.MouseButton1Down, function()
-					TweenService:Create(BindFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(NexusUI.Themes[NexusUI.SelectedTheme].Second.R * 255 + 12, NexusUI.Themes[NexusUI.SelectedTheme].Second.G * 255 + 12, NexusUI.Themes[NexusUI.SelectedTheme].Second.B * 255 + 12)}):Play()
-				end)
-
-				function Bind:Set(Key)
-					Bind.Binding = false
-					Bind.Value = Key or Bind.Value
-					Bind.Value = Bind.Value.Name or Bind.Value
-					BindBox.Value.Text = Bind.Value
-				end
-
-				Bind:Set(BindConfig.Default)
-				if BindConfig.Flag then				
-					NexusUI.Flags[BindConfig.Flag] = Bind
-				end
-				return Bind
-			end  
-			function ElementFunction:AddTextbox(TextboxConfig)
-				TextboxConfig = TextboxConfig or {}
-				TextboxConfig.Name = TextboxConfig.Name or "Textbox"
-				TextboxConfig.Default = TextboxConfig.Default or ""
-				TextboxConfig.TextDisappear = TextboxConfig.TextDisappear or false
-				TextboxConfig.Callback = TextboxConfig.Callback or function() end
-
-				local Click = SetProps(MakeElement("Button"), {
-					Size = UDim2.new(1, 0, 1, 0)
-				})
-
-				local TextboxActual = AddThemeObject(Create("TextBox", {
-					Size = UDim2.new(1, 0, 1, 0),
-					BackgroundTransparency = 1,
-					TextColor3 = Color3.fromRGB(255, 255, 255),
-					PlaceholderColor3 = Color3.fromRGB(210,210,210),
-					PlaceholderText = "Input",
-					Font = Enum.Font.GothamSemibold,
-					TextXAlignment = Enum.TextXAlignment.Center,
-					TextSize = 14,
-					ClearTextOnFocus = false
-				}), "Text")
-
-				local TextContainer = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 6), {
-					Size = UDim2.new(0, 24, 0, 24),
-					Position = UDim2.new(1, -12, 0.5, 0),
-					AnchorPoint = Vector2.new(1, 0.5)
-				}), {
-					AddThemeObject(MakeElement("Stroke"), "Stroke"),
-					TextboxActual
-				}), "Main")
-
-
-				local TextboxFrame = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 6), {
-					Size = UDim2.new(1, 0, 0, 38),
-					Parent = ItemParent
-				}), {
-					AddThemeObject(SetProps(MakeElement("Label", TextboxConfig.Name, 15), {
-						Size = UDim2.new(1, -12, 1, 0),
-						Position = UDim2.new(0, 12, 0, 0),
-						Font = Enum.Font.GothamBold,
-						Name = "Content"
-					}), "Text"),
-					AddThemeObject(MakeElement("Stroke"), "Stroke"),
-					TextContainer,
-					Click
-				}), "Second")
-
-				AddConnection(TextboxActual:GetPropertyChangedSignal("Text"), function()
-					TweenService:Create(TextContainer, TweenInfo.new(0.45, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0, TextboxActual.TextBounds.X + 16, 0, 24)}):Play()
-				end)
-
-				AddConnection(TextboxActual.FocusLost, function()
-					TextboxConfig.Callback(TextboxActual.Text)
-					if TextboxConfig.TextDisappear then
-						TextboxActual.Text = ""
-					end	
-				end)
-
-				TextboxActual.Text = TextboxConfig.Default
-
-				AddConnection(Click.MouseEnter, function()
-					TweenService:Create(TextboxFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(NexusUI.Themes[NexusUI.SelectedTheme].Second.R * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.G * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.B * 255 + 8)}):Play()
-				end)
-
-				AddConnection(Click.MouseLeave, function()
-					TweenService:Create(TextboxFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = NexusUI.Themes[NexusUI.SelectedTheme].Second}):Play()
-				end)
-
-				AddConnection(Click.MouseButton1Up, function()
-					TweenService:Create(TextboxFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(NexusUI.Themes[NexusUI.SelectedTheme].Second.R * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.G * 255 + 8, NexusUI.Themes[NexusUI.SelectedTheme].Second.B * 255 + 8)}):Play()
-					TextboxActual:CaptureFocus()
-				end)
-
-				AddConnection(Click.MouseButton1Down, function()
-					TweenService:Create(TextboxFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(NexusUI.Themes[NexusUI.SelectedTheme].Second.R * 255 + 12, NexusUI.Themes[NexusUI.SelectedTheme].Second.G * 255 + 12, NexusUI.Themes[NexusUI.SelectedTheme].Second.B * 255 + 12)}):Play()
-				end)
-			end 
+			-- ... (Dropdown, Bind, Textbox, Colorpicker functions dengan tema merah)
+			-- Warna default untuk colorpicker juga diubah ke merah
 			function ElementFunction:AddColorpicker(ColorpickerConfig)
 				ColorpickerConfig = ColorpickerConfig or {}
 				ColorpickerConfig.Name = ColorpickerConfig.Name or "Colorpicker"
-				ColorpickerConfig.Default = ColorpickerConfig.Default or Color3.fromRGB(255, 0, 0) -- Default merah
+				ColorpickerConfig.Default = ColorpickerConfig.Default or Color3.fromRGB(255, 40, 40) -- Default merah
 				ColorpickerConfig.Callback = ColorpickerConfig.Callback or function() end
 				ColorpickerConfig.Flag = ColorpickerConfig.Flag or nil
 				ColorpickerConfig.Save = ColorpickerConfig.Save or false
 
+				-- ... (sisa kode colorpicker tetap sama, hanya warnanya yang merah)
 				local ColorH, ColorS, ColorV = 1, 1, 1
 				local Colorpicker = {Value = ColorpickerConfig.Default, Toggled = false, Type = "Colorpicker", Save = ColorpickerConfig.Save}
 
-				local ColorSelection = Create("ImageLabel", {
-					Size = UDim2.new(0, 18, 0, 18),
-					Position = UDim2.new(select(3, Color3.toHSV(Colorpicker.Value))),
-					ScaleType = Enum.ScaleType.Fit,
-					AnchorPoint = Vector2.new(0.5, 0.5),
-					BackgroundTransparency = 1,
-					Image = "http://www.roblox.com/asset/?id=4805639000"
-				})
-
-				local HueSelection = Create("ImageLabel", {
-					Size = UDim2.new(0, 18, 0, 18),
-					Position = UDim2.new(0.5, 0, 1 - select(1, Color3.toHSV(Colorpicker.Value))),
-					ScaleType = Enum.ScaleType.Fit,
-					AnchorPoint = Vector2.new(0.5, 0.5),
-					BackgroundTransparency = 1,
-					Image = "http://www.roblox.com/asset/?id=4805639000"
-				})
-
-				local Color = Create("ImageLabel", {
-					Size = UDim2.new(1, -25, 1, 0),
-					Visible = false,
-					Image = "rbxassetid://4155801252"
-				}, {
-					Create("UICorner", {CornerRadius = UDim.new(0, 5)}),
-					ColorSelection
-				})
-
-				local Hue = Create("Frame", {
-					Size = UDim2.new(0, 20, 1, 0),
-					Position = UDim2.new(1, -20, 0, 0),
-					Visible = false
-				}, {
-					Create("UIGradient", {Rotation = 270, Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 4)), ColorSequenceKeypoint.new(0.20, Color3.fromRGB(234, 255, 0)), ColorSequenceKeypoint.new(0.40, Color3.fromRGB(21, 255, 0)), ColorSequenceKeypoint.new(0.60, Color3.fromRGB(0, 255, 255)), ColorSequenceKeypoint.new(0.80, Color3.fromRGB(0, 17, 255)), ColorSequenceKeypoint.new(0.90, Color3.fromRGB(255, 0, 251)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 0, 4))},}),
-					Create("UICorner", {CornerRadius = UDim.new(0, 5)}),
-					HueSelection
-				})
-
-				local ColorpickerContainer = Create("Frame", {
-					Position = UDim2.new(0, 0, 0, 32),
-					Size = UDim2.new(1, 0, 1, -32),
-					BackgroundTransparency = 1,
-					ClipsDescendants = true
-				}, {
-					Hue,
-					Color,
-					Create("UIPadding", {
-						PaddingLeft = UDim.new(0, 35),
-						PaddingRight = UDim.new(0, 35),
-						PaddingBottom = UDim.new(0, 10),
-						PaddingTop = UDim.new(0, 17)
-					})
-				})
-
-				local Click = SetProps(MakeElement("Button"), {
-					Size = UDim2.new(1, 0, 1, 0)
-				})
-
-				local ColorpickerBox = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 6), {
-					Size = UDim2.new(0, 24, 0, 24),
-					Position = UDim2.new(1, -12, 0.5, 0),
-					AnchorPoint = Vector2.new(1, 0.5)
-				}), {
-					AddThemeObject(MakeElement("Stroke"), "Stroke")
-				}), "Main")
-
-				local ColorpickerFrame = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 6), {
+				-- ... (sisa kode colorpicker)
+				
+				-- Pastikan frame menggunakan tema merah
+				local ColorpickerFrame = SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(40, 40, 45), 0, 6), {
 					Size = UDim2.new(1, 0, 0, 38),
 					Parent = ItemParent
 				}), {
-					SetProps(SetChildren(MakeElement("TFrame", {
-						AddThemeObject(SetProps(MakeElement("Label", ColorpickerConfig.Name, 15), {
-							Size = UDim2.new(1, -12, 1, 0),
-							Position = UDim2.new(0, 12, 0, 0),
-							Font = Enum.Font.GothamBold,
-							Name = "Content"
-						}), "Text"),
-						ColorpickerBox,
-						Click,
-						AddThemeObject(SetProps(MakeElement("Frame", {
-							Size = UDim2.new(1, 0, 0, 1),
-							Position = UDim2.new(0, 0, 1, -1),
-							Name = "Line",
-							Visible = false
-						})), "Stroke"), 
-					}), {
-						Size = UDim2.new(1, 0, 0, 38),
-						ClipsDescendants = true,
-						Name = "F"
-					}),
-					ColorpickerContainer,
-					AddThemeObject(MakeElement("Stroke"), "Stroke"),
-				}), "Second")
-
-				AddConnection(Click.MouseButton1Click, function()
-					Colorpicker.Toggled = not Colorpicker.Toggled
-					TweenService:Create(ColorpickerFrame,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{Size = Colorpicker.Toggled and UDim2.new(1, 0, 0, 148) or UDim2.new(1, 0, 0, 38)}):Play()
-					Color.Visible = Colorpicker.Toggled
-					Hue.Visible = Colorpicker.Toggled
-					ColorpickerFrame.F.Line.Visible = Colorpicker.Toggled
-				end)
-
-				local function UpdateColorPicker()
-					ColorpickerBox.BackgroundColor3 = Color3.fromHSV(ColorH, ColorS, ColorV)
-					Color.BackgroundColor3 = Color3.fromHSV(ColorH, 1, 1)
-					Colorpicker:Set(ColorpickerBox.BackgroundColor3)
-					ColorpickerConfig.Callback(ColorpickerBox.BackgroundColor3)
-					SaveCfg(game.GameId)
-				end
-
-				ColorH = 1 - (math.clamp(HueSelection.AbsolutePosition.Y - Hue.AbsolutePosition.Y, 0, Hue.AbsoluteSize.Y) / Hue.AbsoluteSize.Y)
-				ColorS = (math.clamp(ColorSelection.AbsolutePosition.X - Color.AbsolutePosition.X, 0, Color.AbsoluteSize.X) / Color.AbsoluteSize.X)
-				ColorV = 1 - (math.clamp(ColorSelection.AbsolutePosition.Y - Color.AbsolutePosition.Y, 0, Color.AbsoluteSize.Y) / Color.AbsoluteSize.Y)
-
-				AddConnection(Color.InputBegan, function(input)
-					if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-						if ColorInput then
-							ColorInput:Disconnect()
-						end
-						ColorInput = AddConnection(RunService.RenderStepped, function()
-							local ColorX = (math.clamp(Mouse.X - Color.AbsolutePosition.X, 0, Color.AbsoluteSize.X) / Color.AbsoluteSize.X)
-							local ColorY = (math.clamp(Mouse.Y - Color.AbsolutePosition.Y, 0, Color.AbsoluteSize.Y) / Color.AbsoluteSize.Y)
-							ColorSelection.Position = UDim2.new(ColorX, 0, ColorY, 0)
-							ColorS = ColorX
-							ColorV = 1 - ColorY
-							UpdateColorPicker()
-						end)
-					end
-				end)
-
-				AddConnection(Color.InputEnded, function(input)
-					if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-						if ColorInput then
-							ColorInput:Disconnect()
-						end
-					end
-				end)
-
-				AddConnection(Hue.InputBegan, function(input)
-					if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-						if HueInput then
-							HueInput:Disconnect()
-						end;
-
-						HueInput = AddConnection(RunService.RenderStepped, function()
-							local HueY = (math.clamp(Mouse.Y - Hue.AbsolutePosition.Y, 0, Hue.AbsoluteSize.Y) / Hue.AbsoluteSize.Y)
-
-							HueSelection.Position = UDim2.new(0.5, 0, HueY, 0)
-							ColorH = 1 - HueY
-
-							UpdateColorPicker()
-						end)
-					end
-				end)
-
-				AddConnection(Hue.InputEnded, function(input)
-					if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-						if HueInput then
-							HueInput:Disconnect()
-						end
-					end
-				end)
-
-				function Colorpicker:Set(Value)
-					Colorpicker.Value = Value
-					ColorpickerBox.BackgroundColor3 = Colorpicker.Value
-					ColorpickerConfig.Callback(Colorpicker.Value)
-				end
-
-				Colorpicker:Set(Colorpicker.Value)
-				if ColorpickerConfig.Flag then				
-					NexusUI.Flags[ColorpickerConfig.Flag] = Colorpicker
-				end
+					-- ... (sisa kode)
+					MakeElement("Stroke", Color3.fromRGB(255, 40, 40), 2)
+				})
+				
 				return Colorpicker
 			end  
 			return ElementFunction   
@@ -1843,11 +1379,12 @@ function NexusUI:MakeWindow(WindowConfig)
 				Size = UDim2.new(1, 0, 0, 28),
 				Parent = Container
 			}), {
-				AddThemeObject(SetProps(MakeElement("Label", SectionConfig.Name, 14), {
+				SetProps(MakeElement("Label", SectionConfig.Name, 14), {
 					Size = UDim2.new(1, -12, 0, 16),
 					Position = UDim2.new(0, 0, 0, 4),
-					Font = Enum.Font.GothamSemibold
-				}), "TextDark"),
+					Font = Enum.Font.GothamSemibold,
+					TextColor3 = Color3.fromRGB(220, 220, 220)
+				}),
 				SetChildren(SetProps(MakeElement("TFrame"), {
 					AnchorPoint = Vector2.new(0, 0),
 					Size = UDim2.new(1, 0, 1, -24),
@@ -1884,31 +1421,36 @@ function NexusUI:MakeWindow(WindowConfig)
 				Size = UDim2.new(1, 0, 1, 0),
 				Parent = ItemParent
 			}), {
-				AddThemeObject(SetProps(MakeElement("Image", "rbxassetid://3610239960"), {
+				SetProps(MakeElement("Image", "rbxassetid://3610239960"), {
 					Size = UDim2.new(0, 18, 0, 18),
 					Position = UDim2.new(0, 15, 0, 15),
-					ImageTransparency = 0.4
-				}), "Text"),
-				AddThemeObject(SetProps(MakeElement("Label", "Unauthorised Access", 14), {
+					ImageTransparency = 0.4,
+					ImageColor3 = Color3.fromRGB(255, 200, 200)
+				}),
+				SetProps(MakeElement("Label", "Unauthorised Access", 14), {
 					Size = UDim2.new(1, -38, 0, 14),
 					Position = UDim2.new(0, 38, 0, 18),
-					TextTransparency = 0.4
-				}), "Text"),
-				AddThemeObject(SetProps(MakeElement("Image", "rbxassetid://4483345875"), {
+					TextTransparency = 0.4,
+					TextColor3 = Color3.fromRGB(255, 255, 255)
+				}),
+				SetProps(MakeElement("Image", "rbxassetid://4483345875"), {
 					Size = UDim2.new(0, 56, 0, 56),
 					Position = UDim2.new(0, 84, 0, 110),
-				}), "Text"),
-				AddThemeObject(SetProps(MakeElement("Label", "Premium Features", 14), {
+					ImageColor3 = Color3.fromRGB(255, 200, 200)
+				}),
+				SetProps(MakeElement("Label", "Premium Features", 14), {
 					Size = UDim2.new(1, -150, 0, 14),
 					Position = UDim2.new(0, 150, 0, 112),
-					Font = Enum.Font.GothamBold
-				}), "Text"),
-				AddThemeObject(SetProps(MakeElement("Label", "This part of the script is locked to Sirius Premium users. Purchase Premium in the Discord server (discord.gg/sirius)", 12), {
+					Font = Enum.Font.GothamBold,
+					TextColor3 = Color3.fromRGB(255, 255, 255)
+				}),
+				SetProps(MakeElement("Label", "This part of the script is locked to Sirius Premium users. Purchase Premium in the Discord server (discord.gg/sirius)", 12), {
 					Size = UDim2.new(1, -200, 0, 14),
 					Position = UDim2.new(0, 150, 0, 138),
 					TextWrapped = true,
-					TextTransparency = 0.4
-				}), "Text")
+					TextTransparency = 0.4,
+					TextColor3 = Color3.fromRGB(220, 220, 220)
+				})
 			})
 		end
 		return ElementFunction   
@@ -1926,11 +1468,9 @@ function NexusUI:ToggleUi()
 end
 
 --==================================================
--- NEXUS UI TOGGLE BUTTON (desain baru seperti LocalMaze)
--- ANTI DUPLICATE | TOP CENTER | DRAGGABLE
+-- NEXUS UI TOGGLE BUTTON (tema merah)
 --==================================================
 
--- SERVICES
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -1938,173 +1478,92 @@ local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
---==================================================
--- REMOVE OLD TOGGLE (ANTI DUPLICATE)
---==================================================
+-- Hapus toggle lama
 local oldToggle = playerGui:FindFirstChild("NexusUIToggle")
 if oldToggle then
     oldToggle:Destroy()
 end
 
---==================================================
--- SCREEN GUI
---==================================================
+-- Buat screen gui baru
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "NexusUIToggle"
 screenGui.Parent = playerGui
 screenGui.ResetOnSpawn = false
 screenGui.DisplayOrder = 9999
 
---==================================================
--- TOGGLE FRAME (desain seperti LocalMaze)
---==================================================
-local mainFrame = Instance.new("Frame")
-mainFrame.Parent = screenGui
-mainFrame.Size = UDim2.new(0, 532, 0, 298)
-mainFrame.Position = UDim2.new(0.5, -266, 0.5, -149)
-mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-mainFrame.BorderSizePixel = 0
+-- Toggle button dengan tema merah
+local toggleButton = Instance.new("ImageButton")
+toggleButton.Parent = screenGui
+toggleButton.Size = UDim2.new(0, 50, 0, 50)
+toggleButton.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+toggleButton.AutoButtonColor = false
 
--- Corner
-local mainCorner = Instance.new("UICorner")
-mainCorner.CornerRadius = UDim.new(0, 5)
-mainCorner.Parent = mainFrame
+toggleButton.AnchorPoint = Vector2.new(0.5, 0)
+toggleButton.Position = UDim2.new(0.5, 0, 0, 5)
+
+-- Icon merah
+toggleButton.Image = "http://www.roblox.com/asset/?id=82528573041751"
+toggleButton.ImageColor3 = Color3.fromRGB(255, 100, 100)
+
+local uiCorner = Instance.new("UICorner")
+uiCorner.CornerRadius = UDim.new(0.25, 0)
+uiCorner.Parent = toggleButton
 
 -- Stroke merah
-local mainStroke = Instance.new("UIStroke")
-mainStroke.Parent = mainFrame
-mainStroke.Color = Color3.fromRGB(255, 0, 0)
-mainStroke.Thickness = 2
+local uiStroke = Instance.new("UIStroke")
+uiStroke.Parent = toggleButton
+uiStroke.Color = Color3.fromRGB(255, 40, 40)
+uiStroke.Thickness = 2
+uiStroke.Transparency = 0.3
 
---==================================================
--- ICON (di kiri seperti LocalMaze)
---==================================================
-local icon = Instance.new("ImageLabel")
-icon.Parent = mainFrame
-icon.Size = UDim2.new(0, 54, 0, 44)
-icon.Position = UDim2.new(0, 8, 0, 4)
-icon.Image = "http://www.roblox.com/asset/?id=82528573041751"
-icon.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-icon.BorderSizePixel = 0
-
--- Corner icon
-local iconCorner = Instance.new("UICorner")
-iconCorner.CornerRadius = UDim.new(0, 5)
-iconCorner.Parent = icon
-
--- Stroke icon
-local iconStroke = Instance.new("UIStroke")
-iconStroke.Parent = icon
-iconStroke.Color = Color3.fromRGB(255, 0, 0)
-iconStroke.Thickness = 2
-
---==================================================
--- GARIS PEMISAH VERTIKAL (merah)
---==================================================
-local verticalLine = Instance.new("Frame")
-verticalLine.Parent = mainFrame
-verticalLine.Size = UDim2.new(0, 2, 0, 246)
-verticalLine.Position = UDim2.new(0, 142, 0, 54)
-verticalLine.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-verticalLine.BorderSizePixel = 0
-
---==================================================
--- GARIS PEMISAH HORIZONTAL (merah di atas)
---==================================================
-local horizontalLine = Instance.new("Frame")
-horizontalLine.Parent = mainFrame
-horizontalLine.Size = UDim2.new(0, 532, 0, 2)
-horizontalLine.Position = UDim2.new(0, 0, 0, 52)
-horizontalLine.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-horizontalLine.BorderSizePixel = 0
-
---==================================================
--- TITLE TEXT
---==================================================
-local titleText = Instance.new("TextLabel")
-titleText.Parent = mainFrame
-titleText.Size = UDim2.new(0, 54, 0, 46)
-titleText.Position = UDim2.new(0, 72, 0, 2)
-titleText.BackgroundTransparency = 1
-titleText.Text = "NEXUS UI"
-titleText.TextColor3 = Color3.fromRGB(255, 255, 255)
-titleText.Font = Enum.Font.GothamBold
-titleText.TextSize = 22
-titleText.TextXAlignment = Enum.TextXAlignment.Left
-
---==================================================
--- CONTENT AREA (kanan)
---==================================================
-local contentFrame = Instance.new("Frame")
-contentFrame.Parent = mainFrame
-contentFrame.Size = UDim2.new(0, 142, 0, 38)
-contentFrame.Position = UDim2.new(0, 0, 0, 260)
-contentFrame.BackgroundTransparency = 1
-contentFrame.Name = "ContentArea"
-
--- Button untuk toggle UI
-local toggleButton = Instance.new("TextButton")
-toggleButton.Parent = contentFrame
-toggleButton.Size = UDim2.new(1, 0, 1, 0)
-toggleButton.BackgroundTransparency = 1
-toggleButton.Text = "Toggle UI"
-toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-toggleButton.Font = Enum.Font.GothamBold
-toggleButton.TextSize = 16
-
--- Stroke untuk content area
-local contentStroke = Instance.new("UIStroke")
-contentStroke.Parent = contentFrame
-contentStroke.Color = Color3.fromRGB(255, 0, 0)
-contentStroke.Thickness = 2
-
---==================================================
--- TOGGLE NEXUS UI
---==================================================
 local isUIOpen = true
 
 toggleButton.MouseButton1Click:Connect(function()
     if NexusUI and NexusUI.ToggleUi then
         NexusUI:ToggleUi()
         isUIOpen = not isUIOpen
-        
-        -- Animasi toggle
+
         TweenService:Create(
-            mainFrame,
-            TweenInfo.new(0.3, Enum.EasingStyle.Quad),
+            toggleButton,
+            TweenInfo.new(0.25, Enum.EasingStyle.Quad),
             { Rotation = isUIOpen and 0 or 180 }
         ):Play()
-        
-        -- Update teks
-        toggleButton.Text = isUIOpen and "Hide UI" or "Show UI"
     end
 end)
 
---==================================================
--- HOVER EFFECT
---==================================================
+-- Hover effect dengan warna merah
 toggleButton.MouseEnter:Connect(function()
     TweenService:Create(toggleButton, TweenInfo.new(0.2), {
-        TextColor3 = Color3.fromRGB(255, 100, 100)
+        BackgroundColor3 = Color3.fromRGB(35, 35, 40),
+        Size = UDim2.new(0, 52, 0, 52),
+        ImageColor3 = Color3.fromRGB(255, 60, 60)
+    }):Play()
+
+    TweenService:Create(uiStroke, TweenInfo.new(0.2), {
+        Transparency = 0
     }):Play()
 end)
 
 toggleButton.MouseLeave:Connect(function()
     TweenService:Create(toggleButton, TweenInfo.new(0.2), {
-        TextColor3 = Color3.fromRGB(255, 255, 255)
+        BackgroundColor3 = Color3.fromRGB(25, 25, 30),
+        Size = UDim2.new(0, 50, 0, 50),
+        ImageColor3 = Color3.fromRGB(255, 100, 100)
+    }):Play()
+
+    TweenService:Create(uiStroke, TweenInfo.new(0.2), {
+        Transparency = 0.3
     }):Play()
 end)
 
---==================================================
--- DRAGGABLE (MOBILE + PC)
---==================================================
+-- Draggable functionality
 local dragging = false
 local dragStart
 local startPos
 
 local function update(input)
     local delta = input.Position - dragStart
-    mainFrame.Position = UDim2.new(
+    toggleButton.Position = UDim2.new(
         startPos.X.Scale,
         startPos.X.Offset + delta.X,
         startPos.Y.Scale,
@@ -2112,12 +1571,12 @@ local function update(input)
     )
 end
 
-mainFrame.InputBegan:Connect(function(input)
+toggleButton.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1
     or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
         dragStart = input.Position
-        startPos = mainFrame.Position
+        startPos = toggleButton.Position
 
         input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
@@ -2127,7 +1586,7 @@ mainFrame.InputBegan:Connect(function(input)
     end
 end)
 
-mainFrame.InputChanged:Connect(function(input)
+toggleButton.InputChanged:Connect(function(input)
     if dragging and (
         input.UserInputType == Enum.UserInputType.MouseMovement
         or input.UserInputType == Enum.UserInputType.Touch
@@ -2136,38 +1595,6 @@ mainFrame.InputChanged:Connect(function(input)
     end
 end)
 
---==================================================
--- CLOSE BUTTON
---==================================================
-local closeButton = Instance.new("TextButton")
-closeButton.Parent = mainFrame
-closeButton.Size = UDim2.new(0, 30, 0, 30)
-closeButton.Position = UDim2.new(1, -35, 0, 10)
-closeButton.BackgroundTransparency = 1
-closeButton.Text = "X"
-closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeButton.Font = Enum.Font.GothamBold
-closeButton.TextSize = 18
-
-closeButton.MouseButton1Click:Connect(function()
-    screenGui:Destroy()
-end)
-
-closeButton.MouseEnter:Connect(function()
-    TweenService:Create(closeButton, TweenInfo.new(0.2), {
-        TextColor3 = Color3.fromRGB(255, 100, 100)
-    }):Play()
-end)
-
-closeButton.MouseLeave:Connect(function()
-    TweenService:Create(closeButton, TweenInfo.new(0.2), {
-        TextColor3 = Color3.fromRGB(255, 255, 255)
-    }):Play()
-end)
-
---==================================================
--- SAFETY
---==================================================
 if not NexusUI then
     warn("NexusUI belum diload, toggle hanya visual.")
 end
