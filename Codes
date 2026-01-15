@@ -12,20 +12,12 @@ local NexusUI = {
 	Flags = {},
 	Themes = {
 		Default = {
-			Main = Color3.fromRGB(20, 20, 20),
-			Second = Color3.fromRGB(30, 30, 35),
-			Stroke = Color3.fromRGB(70, 0, 255),
+			Main = Color3.fromRGB(20, 20, 20),        -- Hitam
+			Second = Color3.fromRGB(30, 30, 35),      -- Abu-abu tua
+			Stroke = Color3.fromRGB(255, 0, 0),       -- Merah
 			Divider = Color3.fromRGB(40, 40, 45),
 			Text = Color3.fromRGB(240, 240, 240),
 			TextDark = Color3.fromRGB(180, 180, 185)
-		},
-		Dark = {
-			Main = Color3.fromRGB(15, 15, 15),
-			Second = Color3.fromRGB(25, 25, 30),
-			Stroke = Color3.fromRGB(0, 170, 255),
-			Divider = Color3.fromRGB(35, 35, 40),
-			Text = Color3.fromRGB(240, 240, 240),
-			TextDark = Color3.fromRGB(170, 170, 175)
 		}
 	},
 	SelectedTheme = "Default",
@@ -412,7 +404,7 @@ function NexusUI:MakeNotification(NotificationConfig)
 			BackgroundTransparency = 0,
 			AutomaticSize = Enum.AutomaticSize.Y
 		}), {
-			MakeElement("Stroke", Color3.fromRGB(70, 0, 255), 1.2),
+			MakeElement("Stroke", Color3.fromRGB(255, 0, 0), 1.2),
 			MakeElement("Padding", 12, 12, 12, 12),
 			SetProps(MakeElement("Image", NotificationConfig.Image), {
 				Size = UDim2.new(0, 20, 0, 20),
